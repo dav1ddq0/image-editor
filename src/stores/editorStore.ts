@@ -71,6 +71,10 @@ export const useEditorStore = defineStore('editor', () => {
     if (adjustments.blur !== 0)
       parts.push(`blur(${(adjustments.blur / 10).toFixed(1)}px)`)
 
+    // url() references the SVG feConvolveMatrix filter defined in CanvasArea.vue
+    if (adjustments.sharpness > 0)
+      parts.push('url(#image-sharpen)')
+
     return parts.join(' ')
   })
 
