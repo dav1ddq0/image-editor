@@ -141,7 +141,14 @@ function confirm(): void {
     </div>
 
     <!-- Hint before placement -->
-    <div v-if="!placed" class="placement-hint">Click to place text</div>
+    <div v-if="!placed" class="placement-hint">
+      <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M4 7V4h3M17 4h3v3M4 17v3h3M17 20h3v-3"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8"  y1="12" x2="16" y2="12"/>
+      </svg>
+      <span>Click anywhere to place text</span>
+    </div>
 
     <!--
       Text box: wrapper positioned at (posX, posY).
@@ -183,7 +190,12 @@ function confirm(): void {
   user-select: none;
 }
 
-.cursor-crosshair { cursor: crosshair; }
+/* Dashed inset border signals that the whole image area is clickable */
+.text-overlay.cursor-crosshair {
+  cursor: crosshair;
+  outline: 2px dashed rgba(255, 255, 255, 0.35);
+  outline-offset: -6px;
+}
 
 /* ── Toolbar ─────────────────────────────────────── */
 .text-toolbar {
@@ -301,10 +313,35 @@ function confirm(): void {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: rgba(255,255,255,0.6);
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
   pointer-events: none;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  animation: hint-fade-in 0.18s ease;
+}
+
+.hint-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+@keyframes hint-fade-in {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 /* ── Text box (wrapper + drag handle + textarea) ─── */
