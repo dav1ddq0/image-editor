@@ -193,7 +193,7 @@ function confirm(): void {
 /* Dashed inset border signals that the whole image area is clickable */
 .text-overlay.cursor-crosshair {
   cursor: crosshair;
-  outline: 2px dashed rgba(255, 255, 255, 0.35);
+  outline: 2px dashed var(--color-border);
   outline-offset: -6px;
 }
 
@@ -317,25 +317,24 @@ function confirm(): void {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.68);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  color: #fff;
-  font-size: 0.85rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.82rem;
   font-weight: 500;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   animation: hint-fade-in 0.18s ease;
 }
 
 .hint-icon {
-  width: 18px;
-  height: 18px;
-  opacity: 0.85;
+  width: 16px;
+  height: 16px;
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
@@ -357,24 +356,24 @@ function confirm(): void {
   align-items: center;
   justify-content: center;
   height: 18px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px dashed rgba(255, 255, 255, 0.5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-bottom: none;
-  border-radius: 3px 3px 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   cursor: move;
   user-select: none;
 }
 
 .drag-icon {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-muted);
   letter-spacing: 2px;
 }
 
 .text-input {
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.6);
-  border-radius: 0 0 3px 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   outline: none;
   resize: none;
   width: 100%;
@@ -389,5 +388,5 @@ function confirm(): void {
   box-sizing: border-box;
 }
 
-.text-input::placeholder { color: rgba(255,255,255,0.4); }
+.text-input::placeholder { color: var(--color-subtle); }
 </style>
