@@ -6,7 +6,8 @@
 
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey } from '@/types/editor'
+import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect } from '@/types/editor'
+import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 
 export const useEditorStore = defineStore('editor', () => {
   // ── State ──────────────────────────────────────────────────────────────────
@@ -20,6 +21,9 @@ export const useEditorStore = defineStore('editor', () => {
   const rotation = ref<number>(0)
   const flipH    = ref<boolean>(false)
   const flipV    = ref<boolean>(false)
+
+  const cropPreset = ref<AspectPreset>('free')
+  const cropLocked = ref<boolean>(false)
 
   const adjustments = reactive<Adjustments>({
     brightness: 0,
@@ -133,6 +137,46 @@ export const useEditorStore = defineStore('editor', () => {
     zoom.value = value
   }
 
+  function applyCrop(normalizedRect: CropRect): void {
+    if (!image.value) return
+    const source = image.value
+    const renderOpts = {
+      cssFilter: cssFilter.value,
+      rotation:  rotation.value,
+      flipH:     flipH.value,
+      flipV:     flipV.value,
+      sharpness: adjustments.sharpness,
+    }
+    const img = new Image()
+    img.onload = () => {
+      const rendered = buildRenderedCanvas(img, renderOpts)
+      const cropX = Math.round(normalizedRect.x * rendered.width)
+      const cropY = Math.round(normalizedRect.y * rendered.height)
+      const cropW = Math.round(normalizedRect.w * rendered.width)
+      const cropH = Math.round(normalizedRect.h * rendered.height)
+      const output = document.createElement('canvas')
+      output.width  = cropW
+      output.height = cropH
+      output.getContext('2d')!.drawImage(rendered, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+      output.toBlob((blob) => {
+        if (!blob) return
+        if (source.src.startsWith('blob:')) URL.revokeObjectURL(source.src)
+        image.value = { src: URL.createObjectURL(blob), width: cropW, height: cropH, name: source.name }
+        // Reset all effects since they are now baked into the new image
+        rotation.value = 0
+        flipH.value    = false
+        flipV.value    = false
+        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+        selectedFilter.value = 'none'
+        selectedTool.value   = 'select'
+      }, 'image/png')
+    }
+    img.src = source.src
+  }
+
+  function setCropPreset(p: AspectPreset): void { cropPreset.value = p }
+  function toggleCropLock(): void { cropLocked.value = !cropLocked.value }
+
   // ── Public API ─────────────────────────────────────────────────────────────
   return {
     selectedTool,
@@ -146,6 +190,8 @@ export const useEditorStore = defineStore('editor', () => {
     hasImage,
     cssFilter,
     cssTransform,
+    cropPreset,
+    cropLocked,
     selectTool,
     loadImage,
     updateAdjustment,
@@ -155,5 +201,8 @@ export const useEditorStore = defineStore('editor', () => {
     rotateRight,
     flipHorizontal,
     flipVertical,
+    applyCrop,
+    setCropPreset,
+    toggleCropLock,
   }
 })

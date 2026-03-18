@@ -4,12 +4,44 @@
   itself once one is available, and CanvasStatusBar at the bottom.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
+import CropOverlay from './CropOverlay.vue'
+import type { CropRect } from '@/types/editor'
 
 const editor = useEditorStore()
+
+const isCropping = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
+const imgRef     = ref<HTMLImageElement>()
+const displayW   = ref(0)
+const displayH   = ref(0)
+let resizeObs: ResizeObserver | null = null
+
+function updateDisplaySize() {
+  if (imgRef.value) {
+    displayW.value = imgRef.value.offsetWidth
+    displayH.value = imgRef.value.offsetHeight
+  }
+}
+
+watch(isCropping, (active) => {
+  if (active && imgRef.value) {
+    resizeObs = new ResizeObserver(updateDisplaySize)
+    resizeObs.observe(imgRef.value)
+    updateDisplaySize()
+  } else {
+    resizeObs?.disconnect()
+    resizeObs = null
+  }
+})
+
+onUnmounted(() => resizeObs?.disconnect())
+
+function handleCropApply(rect: CropRect) {
+  editor.applyCrop(rect)
+}
 
 // Builds the 3×3 unsharp-mask kernel string for feConvolveMatrix.
 // Kernel: [ 0  -s  0 / -s  1+4s  -s / 0  -s  0 ] (divisor = 1, sum = 1 → no brightness shift)
@@ -40,14 +72,23 @@ const sharpenKernel = computed<string>(() => {
 
     <div class="canvas-container">
       <CanvasDropZone v-if="!editor.hasImage" />
-
-      <img
-        v-else
-        :src="editor.image.src"
-        :alt="editor.image.name"
-        :style="{ filter: editor.cssFilter, transform: editor.cssTransform }"
-        class="canvas-image"
-      />
+      <div v-else class="image-wrapper">
+        <img
+          ref="imgRef"
+          :src="editor.image.src"
+          :alt="editor.image.name"
+          :style="{ filter: editor.cssFilter, transform: editor.cssTransform }"
+          class="canvas-image"
+          @load="updateDisplaySize"
+        />
+        <CropOverlay
+          v-if="isCropping && displayW > 0"
+          :img-width="displayW"
+          :img-height="displayH"
+          @apply="handleCropApply"
+          @cancel="editor.selectTool('select')"
+        />
+      </div>
     </div>
 
     <!--
@@ -88,5 +129,11 @@ const sharpenKernel = computed<string>(() => {
   object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
+}
+
+.image-wrapper {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
 }
 </style>
