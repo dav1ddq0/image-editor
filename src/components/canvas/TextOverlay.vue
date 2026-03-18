@@ -2,6 +2,7 @@
   TextOverlay.vue
   Text insertion overlay. The user clicks to place an anchor point, types in a
   styled textarea, then confirms to bake the text into the image via applyText.
+  The text box has a drag handle so it can be repositioned while focused.
 -->
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
@@ -36,15 +37,43 @@ const FONT_FAMILIES = ['sans-serif', 'serif', 'monospace', 'Impact', 'Arial', 'G
 
 // ── Styles ─────────────────────────────────────────────────────────────────
 
-const textareaStyle = computed(() => ({
-  left:       posX.value + 'px',
-  top:        posY.value + 'px',
+// The text-box wrapper carries the position; the textarea itself is unstyled.
+const boxStyle = computed(() => ({
+  left: posX.value + 'px',
+  top:  posY.value + 'px',
+}))
+
+const inputStyle = computed(() => ({
   fontSize:   fontSize.value + 'px',
   fontFamily: fontFamily.value,
   color:      color.value,
   fontWeight: bold.value   ? 'bold'   : 'normal',
   fontStyle:  italic.value ? 'italic' : 'normal',
 }))
+
+// ── Drag-to-reposition ─────────────────────────────────────────────────────
+
+function startDrag(e: PointerEvent): void {
+  e.preventDefault()
+  const handle  = e.currentTarget as HTMLElement
+  const originX = e.clientX - posX.value
+  const originY = e.clientY - posY.value
+
+  handle.setPointerCapture(e.pointerId)
+
+  function onMove(ev: PointerEvent): void {
+    posX.value = ev.clientX - originX
+    posY.value = ev.clientY - originY
+  }
+
+  function onUp(): void {
+    handle.removeEventListener('pointermove', onMove as EventListener)
+    handle.removeEventListener('pointerup',   onUp)
+  }
+
+  handle.addEventListener('pointermove', onMove as EventListener)
+  handle.addEventListener('pointerup',   onUp)
+}
 
 // ── Interactions ───────────────────────────────────────────────────────────
 
@@ -61,7 +90,6 @@ async function onOverlayClick(e: MouseEvent): Promise<void> {
 
 function onKeyDown(e: KeyboardEvent): void {
   if (e.key === 'Escape') { emit('cancel'); return }
-  // Ctrl/Cmd+Enter confirms
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); confirm() }
 }
 
@@ -87,7 +115,7 @@ function confirm(): void {
     :class="{ 'cursor-crosshair': !placed }"
     @click="onOverlayClick"
   >
-    <!-- Floating toolbar (always visible once overlay is mounted) -->
+    <!-- Floating toolbar -->
     <div class="text-toolbar" @click.stop>
 
       <select v-model="fontFamily" class="font-select">
@@ -107,7 +135,7 @@ function confirm(): void {
 
       <div class="toolbar-sep" />
 
-      <button class="action-btn cancel" @click="emit('cancel')">✕</button>
+      <button class="action-btn cancel"  @click="emit('cancel')">✕</button>
       <button class="action-btn confirm" :disabled="!text.trim()" @click="confirm">✓</button>
 
     </div>
@@ -115,18 +143,35 @@ function confirm(): void {
     <!-- Hint before placement -->
     <div v-if="!placed" class="placement-hint">Click to place text</div>
 
-    <!-- Textarea positioned at click point -->
-    <textarea
+    <!--
+      Text box: wrapper positioned at (posX, posY).
+      The drag handle at the top can be grabbed at any time — even while the
+      textarea is focused — without interfering with text selection.
+    -->
+    <div
       v-if="placed"
-      ref="textareaRef"
-      v-model="text"
-      class="text-input"
-      :style="textareaStyle"
-      placeholder="Type here…"
-      rows="1"
+      class="text-box"
+      :style="boxStyle"
       @click.stop
-      @keydown="onKeyDown"
-    />
+    >
+      <div
+        class="drag-handle"
+        title="Drag to reposition"
+        @pointerdown.stop="startDrag"
+      >
+        <span class="drag-icon">⠿</span>
+      </div>
+
+      <textarea
+        ref="textareaRef"
+        v-model="text"
+        class="text-input"
+        :style="inputStyle"
+        placeholder="Type here…"
+        rows="1"
+        @keydown="onKeyDown"
+      />
+    </div>
   </div>
 </template>
 
@@ -262,23 +307,49 @@ function confirm(): void {
   text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 
-/* ── Text input ──────────────────────────────────── */
-.text-input {
+/* ── Text box (wrapper + drag handle + textarea) ─── */
+.text-box {
   position: absolute;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  cursor: move;
+  user-select: none;
+}
+
+.drag-icon {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 2px;
+}
+
+.text-input {
   background: transparent;
-  border: 1px dashed rgba(255,255,255,0.6);
-  border-radius: 2px;
+  border: 1px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 0 0 3px 3px;
   outline: none;
   resize: none;
+  width: 100%;
   min-width: 120px;
   padding: 4px 6px;
   line-height: 1.2;
-  /* Inherit font properties from inline style */
   font-size: inherit;
   font-family: inherit;
   color: inherit;
   font-weight: inherit;
   font-style: inherit;
+  box-sizing: border-box;
 }
 
 .text-input::placeholder { color: rgba(255,255,255,0.4); }
