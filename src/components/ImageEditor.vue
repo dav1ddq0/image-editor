@@ -4,7 +4,7 @@
   file open and save/export operations on behalf of the child components.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { useEditorStore } from '@/stores/editorStore'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
@@ -17,6 +17,15 @@ import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
 const showExportDialog = ref(false)
+
+function onKeyDown(e: KeyboardEvent): void {
+  if (!e.ctrlKey && !e.metaKey) return
+  if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); editor.undo() }
+  if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); editor.redo() }
+}
+
+onMounted(()   => window.addEventListener('keydown', onKeyDown))
+onUnmounted(() => window.removeEventListener('keydown', onKeyDown))
 
 function openImage(): void {
   // A transient <input type="file"> is created in memory and never appended to

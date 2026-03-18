@@ -5,10 +5,11 @@
 -->
 <script setup lang="ts">
 withDefaults(defineProps<{
-  icon:   string
-  label:  string
-  active?: boolean
-}>(), { active: false })
+  icon:      string
+  label:     string
+  active?:   boolean
+  disabled?: boolean
+}>(), { active: false, disabled: false })
 
 // Re-emit rather than calling the store directly so this component stays
 // decoupled from any specific store implementation.
@@ -19,6 +20,7 @@ const emit = defineEmits<{ click: [] }>()
   <button
     class="tool-btn"
     :class="{ active }"
+    :disabled="disabled"
     :title="label"
     @click="emit('click')"
   >
@@ -52,5 +54,10 @@ const emit = defineEmits<{ click: [] }>()
   background: var(--color-accent);
   color: #fff;
   border-color: var(--color-accent);
+}
+
+.tool-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 </style>

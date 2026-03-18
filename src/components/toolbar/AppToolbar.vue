@@ -21,11 +21,7 @@ const drawingTools: ToolDefinition[] = [
   { id: 'zoom',   icon: '🔍', label: 'Zoom In' },
 ]
 
-// Undo/redo are action triggers, not mode selectors, so they have no :active binding
-const historyTools: ToolDefinition[] = [
-  { id: 'undo', icon: '↩', label: 'Undo' },
-  { id: 'redo', icon: '↪', label: 'Redo' },
-]
+// Undo/redo are action triggers, not mode selectors — handled separately.
 </script>
 
 <template>
@@ -43,13 +39,8 @@ const historyTools: ToolDefinition[] = [
     </div>
 
     <div class="tool-group">
-      <ToolButton
-        v-for="tool in historyTools"
-        :key="tool.id"
-        :icon="tool.icon"
-        :label="tool.label"
-        @click="editor.selectTool(tool.id)"
-      />
+      <ToolButton icon="↩" label="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()" />
+      <ToolButton icon="↪" label="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()" />
     </div>
 
   </aside>

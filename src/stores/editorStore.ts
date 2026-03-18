@@ -9,13 +9,24 @@ import { defineStore } from 'pinia'
 import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect } from '@/types/editor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 
+// Internal snapshot type — not part of the public API
+interface HistorySnapshot {
+  image:          ImageDescriptor
+  rotation:       number
+  flipH:          boolean
+  flipV:          boolean
+  selectedFilter: FilterId
+  adjustments:    Adjustments
+}
+
+const MAX_HISTORY = 50
+
 export const useEditorStore = defineStore('editor', () => {
   // ── State ──────────────────────────────────────────────────────────────────
 
   const selectedTool   = ref<ToolId>('select')
   const zoom           = ref<number>(100)
   const image          = ref<ImageDescriptor | null>(null)
-  // The first descriptor created by loadImage; used by resetImage to restore the original.
   const originalImage  = ref<ImageDescriptor | null>(null)
   const selectedFilter = ref<FilterId>('none')
 
@@ -34,6 +45,61 @@ export const useEditorStore = defineStore('editor', () => {
     sharpness:  0,
     blur:       0,
   })
+
+  // ── History ────────────────────────────────────────────────────────────────
+
+  const undoStack = ref<HistorySnapshot[]>([])
+  const redoStack = ref<HistorySnapshot[]>([])
+
+  const canUndo = computed<boolean>(() => undoStack.value.length > 0)
+  const canRedo = computed<boolean>(() => redoStack.value.length > 0)
+
+  function captureSnapshot(): HistorySnapshot {
+    return {
+      image:          { ...image.value! },
+      rotation:       rotation.value,
+      flipH:          flipH.value,
+      flipV:          flipV.value,
+      selectedFilter: selectedFilter.value,
+      adjustments:    { ...adjustments },
+    }
+  }
+
+  // Pushes current state onto the undo stack and clears redo.
+  // Called at the START of every mutating action (before the change).
+  function pushHistory(): void {
+    if (!image.value) return
+    undoStack.value.push(captureSnapshot())
+    if (undoStack.value.length > MAX_HISTORY) undoStack.value.shift()
+    redoStack.value = []
+  }
+
+  function applySnapshot(s: HistorySnapshot): void {
+    image.value          = s.image
+    rotation.value       = s.rotation
+    flipH.value          = s.flipH
+    flipV.value          = s.flipV
+    selectedFilter.value = s.selectedFilter
+    Object.assign(adjustments, s.adjustments)
+  }
+
+  function undo(): void {
+    if (!canUndo.value) return
+    redoStack.value.push(captureSnapshot())
+    applySnapshot(undoStack.value.pop()!)
+  }
+
+  function redo(): void {
+    if (!canRedo.value) return
+    undoStack.value.push(captureSnapshot())
+    applySnapshot(redoStack.value.pop()!)
+  }
+
+  // Called by AdjustmentSlider on pointerdown — takes ONE snapshot per drag
+  // gesture so continuous slider moves don't flood the undo stack.
+  function beginAdjustment(): void {
+    pushHistory()
+  }
 
   // ── Getters (computed) ─────────────────────────────────────────────────────
 
@@ -95,10 +161,13 @@ export const useEditorStore = defineStore('editor', () => {
     // Blob URL is intentionally never revoked — it is the canonical image source
     // for the lifetime of the session and must remain valid for the <img> element.
 
-    // Temporary off-DOM image element used only to read intrinsic dimensions
     const img = new Image()
 
     img.onload = () => {
+      // Clear history when a new image is loaded — undo/redo is per-image.
+      undoStack.value = []
+      redoStack.value = []
+
       const descriptor: ImageDescriptor = {
         src:    url,
         width:  img.naturalWidth,
@@ -113,27 +182,33 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   function updateAdjustment(key: AdjustmentKey, value: number): void {
-    // Number() cast guards against string values emitted by HTML range inputs
+    // Number() cast guards against string values emitted by HTML range inputs.
+    // History is NOT pushed here; beginAdjustment() handles that on pointerdown.
     adjustments[key] = Number(value)
   }
 
   function rotateLeft(): void {
+    pushHistory()
     rotation.value = (rotation.value - 90 + 360) % 360
   }
 
   function rotateRight(): void {
+    pushHistory()
     rotation.value = (rotation.value + 90) % 360
   }
 
   function flipHorizontal(): void {
+    pushHistory()
     flipH.value = !flipH.value
   }
 
   function flipVertical(): void {
+    pushHistory()
     flipV.value = !flipV.value
   }
 
   function selectFilter(filter: FilterId): void {
+    pushHistory()
     selectedFilter.value = filter
   }
 
@@ -147,6 +222,8 @@ export const useEditorStore = defineStore('editor', () => {
 
   function applyCrop(normalizedRect: CropRect): void {
     if (!image.value) return
+    // Snapshot before the async crop so it can be undone.
+    pushHistory()
     const source = image.value
     const renderOpts = {
       cssFilter: cssFilter.value,
@@ -168,7 +245,7 @@ export const useEditorStore = defineStore('editor', () => {
       output.getContext('2d')!.drawImage(rendered, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       output.toBlob((blob) => {
         if (!blob) return
-        if (source.src.startsWith('blob:')) URL.revokeObjectURL(source.src)
+        // Do NOT revoke source.src — it may still be referenced by a history entry.
         image.value = { src: URL.createObjectURL(blob), width: cropW, height: cropH, name: source.name }
         // Reset all effects since they are now baked into the new image
         rotation.value = 0
@@ -188,8 +265,7 @@ export const useEditorStore = defineStore('editor', () => {
   // Restores the original loaded image and resets every non-destructive edit.
   function resetImage(): void {
     if (!originalImage.value) return
-    if (image.value && image.value !== originalImage.value && image.value.src.startsWith('blob:'))
-      URL.revokeObjectURL(image.value.src)
+    pushHistory()
     // Spread into a new object so CanvasArea's image watcher always fires and re-fits zoom.
     image.value          = { ...originalImage.value }
     rotation.value       = 0
@@ -211,6 +287,8 @@ export const useEditorStore = defineStore('editor', () => {
     flipV,
     adjustments,
     hasImage,
+    canUndo,
+    canRedo,
     cssFilter,
     cssTransform,
     cropPreset,
@@ -218,11 +296,14 @@ export const useEditorStore = defineStore('editor', () => {
     selectTool,
     loadImage,
     updateAdjustment,
+    beginAdjustment,
     selectFilter,
     setZoom,
     zoomIn,
     zoomOut,
     zoomReset,
+    undo,
+    redo,
     rotateLeft,
     rotateRight,
     flipHorizontal,

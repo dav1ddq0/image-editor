@@ -40,6 +40,7 @@ const sliders: SliderConfig[] = [
       :max="slider.max"
       :model-value="editor.adjustments[slider.key]"
       :disabled="!editor.hasImage"
+      @dragstart="editor.beginAdjustment()"
       @update:model-value="editor.updateAdjustment(slider.key, $event)"
     />
 

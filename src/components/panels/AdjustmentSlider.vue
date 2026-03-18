@@ -18,7 +18,10 @@ const props = withDefaults(defineProps<{
   disabled:   false,
 })
 
-const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: number]
+  'dragstart': []
+}>()
 </script>
 
 <template>
@@ -39,6 +42,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
       :max="max"
       :value="modelValue"
       :disabled="disabled"
+      @pointerdown="emit('dragstart')"
       @input="emit('update:modelValue', Number($event.target.value))"
     />
 
