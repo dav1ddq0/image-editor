@@ -9,12 +9,14 @@ import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
 import CropOverlay from './CropOverlay.vue'
-import type { CropRect } from '@/types/editor'
+import TextOverlay from './TextOverlay.vue'
+import type { CropRect, TextLayer } from '@/types/editor'
 
 const editor = useEditorStore()
 
 const isCropping   = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
 const isZooming    = computed(() => editor.selectedTool === 'zoom' && editor.hasImage)
+const isTexting    = computed(() => editor.selectedTool === 'text' && editor.hasImage)
 const containerRef = ref<HTMLDivElement>()
 const imgRef       = ref<HTMLImageElement>()
 const displayW     = ref(0)
@@ -45,8 +47,8 @@ function updateDisplaySize(): void {
   }
 }
 
-watch(isCropping, (active) => {
-  if (active && imgRef.value) {
+watch([isCropping, isTexting], ([cropping, texting]) => {
+  if ((cropping || texting) && imgRef.value) {
     resizeObs = new ResizeObserver(updateDisplaySize)
     resizeObs.observe(imgRef.value)
     updateDisplaySize()
@@ -60,6 +62,10 @@ onUnmounted(() => resizeObs?.disconnect())
 
 function handleCropApply(rect: CropRect): void {
   editor.applyCrop(rect)
+}
+
+function handleTextApply(layer: TextLayer): void {
+  editor.applyText(layer)
 }
 
 // Mouse-wheel zooms the image; each notch = 10 pp, clamped in the store.
@@ -135,6 +141,13 @@ const sharpenKernel = computed<string>(() => {
             :img-width="displayW"
             :img-height="displayH"
             @apply="handleCropApply"
+            @cancel="editor.selectTool('select')"
+          />
+          <TextOverlay
+            v-if="isTexting && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @apply="handleTextApply"
             @cancel="editor.selectTool('select')"
           />
         </div>

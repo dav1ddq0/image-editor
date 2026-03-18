@@ -6,7 +6,7 @@
 
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect } from '@/types/editor'
+import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect, TextLayer } from '@/types/editor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 
 // Internal snapshot type — not part of the public API
@@ -276,6 +276,82 @@ export const useEditorStore = defineStore('editor', () => {
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 
+  // Maps a normalized display-space click (nx, ny) to canvas pixel coordinates,
+  // accounting for the same rotation/flip sequence used in buildRenderedCanvas.
+  function mapDisplayToCanvas(
+    nx: number, ny: number,
+    rot: number, fH: boolean, fV: boolean,
+    w: number, h: number,
+  ): [number, number] {
+    const isOdd = rot === 90 || rot === 270
+    const cw = isOdd ? h : w
+    const ch = isOdd ? w : h
+    const dx = w * (nx - 0.5)
+    const dy = h * (ny - 0.5)
+    const dxs = fH ? -dx : dx
+    const dys = fV ? -dy : dy
+    let rx: number, ry: number
+    if      (rot === 0)   { rx =  dxs; ry =  dys }
+    else if (rot === 90)  { rx =  dys; ry = -dxs }
+    else if (rot === 180) { rx = -dxs; ry = -dys }
+    else                  { rx = -dys; ry =  dxs }
+    return [cw / 2 + rx, ch / 2 + ry]
+  }
+
+  function applyText(layer: TextLayer): void {
+    if (!image.value) return
+    pushHistory()
+    const source = image.value
+    const renderOpts = {
+      cssFilter: cssFilter.value,
+      rotation:  rotation.value,
+      flipH:     flipH.value,
+      flipV:     flipV.value,
+      sharpness: adjustments.sharpness,
+    }
+    const img = new Image()
+    img.onload = () => {
+      const canvas = buildRenderedCanvas(img, renderOpts)
+      const ctx    = canvas.getContext('2d')!
+
+      const [cx, cy] = mapDisplayToCanvas(
+        layer.nx, layer.ny,
+        renderOpts.rotation, renderOpts.flipH, renderOpts.flipV,
+        img.naturalWidth, img.naturalHeight,
+      )
+
+      // Scale font from display pixels to canvas pixels
+      const canvasFontSize = Math.round(layer.fontSize * img.naturalWidth / layer.displayW)
+      const parts = [
+        layer.italic ? 'italic' : '',
+        layer.bold   ? 'bold'   : '',
+        `${canvasFontSize}px`,
+        layer.fontFamily,
+      ].filter(Boolean).join(' ')
+
+      ctx.font         = parts
+      ctx.fillStyle    = layer.color
+      ctx.textBaseline = 'top'
+
+      // Support multiline text
+      const lines     = layer.text.split('\n')
+      const lineHeight = canvasFontSize * 1.2
+      lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * lineHeight))
+
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        image.value = { src: URL.createObjectURL(blob), width: canvas.width, height: canvas.height, name: source.name }
+        rotation.value       = 0
+        flipH.value          = false
+        flipV.value          = false
+        selectedFilter.value = 'none'
+        selectedTool.value   = 'select'
+        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      }, 'image/png')
+    }
+    img.src = source.src
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
   return {
     selectedTool,
@@ -312,5 +388,6 @@ export const useEditorStore = defineStore('editor', () => {
     setCropPreset,
     toggleCropLock,
     resetImage,
+    applyText,
   }
 })
