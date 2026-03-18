@@ -21,6 +21,7 @@ const editor = useEditorStore()
         v-else
         :src="editor.image.src"
         :alt="editor.image.name"
+        :style="{ filter: editor.cssFilter }"
         class="canvas-image"
       />
     </div>

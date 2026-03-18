@@ -28,6 +28,38 @@ export const useEditorStore = defineStore('editor', () => {
 
   const hasImage = computed<boolean>(() => !!image.value)
 
+  // Builds the CSS filter string applied to the canvas image.
+  // Preset filters are combined with the numeric adjustment sliders so both
+  // work simultaneously and react to each other in real time.
+  const cssFilter = computed<string>(() => {
+    const parts: string[] = []
+
+    const presetMap: Record<FilterId, string> = {
+      none:      '',
+      sepia:     'sepia(1)',
+      grayscale: 'grayscale(1)',
+      // vivid/cool/warm simulate the effect with saturation + hue shifts
+      vivid:     'saturate(1.8) contrast(1.1)',
+      cool:      'hue-rotate(200deg) saturate(1.1)',
+      warm:      'sepia(0.3) saturate(1.4)',
+    }
+
+    const preset = presetMap[selectedFilter.value]
+    if (preset) parts.push(preset)
+
+    // Store range is -100…100; CSS expects a multiplier around 1.0
+    if (adjustments.brightness !== 0)
+      parts.push(`brightness(${1 + adjustments.brightness / 100})`)
+    if (adjustments.contrast !== 0)
+      parts.push(`contrast(${1 + adjustments.contrast / 100})`)
+    if (adjustments.saturation !== 0)
+      parts.push(`saturate(${1 + adjustments.saturation / 100})`)
+    if (adjustments.blur !== 0)
+      parts.push(`blur(${(adjustments.blur / 10).toFixed(1)}px)`)
+
+    return parts.join(' ')
+  })
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
   function selectTool(tool: ToolId): void {
@@ -75,6 +107,7 @@ export const useEditorStore = defineStore('editor', () => {
     selectedFilter,
     adjustments,
     hasImage,
+    cssFilter,
     selectTool,
     loadImage,
     updateAdjustment,
