@@ -1,30 +1,27 @@
 <script setup>
-import { computed } from 'vue'
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
 
-const { state } = useEditor()
-
-const hasImage = computed(() => !!state.image)
+const editor = useEditorStore()
 </script>
 
 <template>
   <main class="canvas-area">
     <div class="canvas-container">
-      <CanvasDropZone v-if="!hasImage" />
+      <CanvasDropZone v-if="!editor.hasImage" />
       <img
         v-else
-        :src="state.image.src"
-        :alt="state.image.name"
+        :src="editor.image.src"
+        :alt="editor.image.name"
         class="canvas-image"
       />
     </div>
     <CanvasStatusBar
-      :zoom="state.zoom"
-      :image-width="state.image?.width"
-      :image-height="state.image?.height"
-      :image-name="state.image?.name"
+      :zoom="editor.zoom"
+      :image-width="editor.image?.width"
+      :image-height="editor.image?.height"
+      :image-name="editor.image?.name"
     />
   </main>
 </template>

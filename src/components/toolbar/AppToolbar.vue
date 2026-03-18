@@ -1,8 +1,8 @@
 <script setup>
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 import ToolButton from './ToolButton.vue'
 
-const { state, selectTool } = useEditor()
+const editor = useEditorStore()
 
 const drawingTools = [
   { id: 'select', icon: '↖', label: 'Select' },
@@ -29,8 +29,8 @@ const historyTools = [
         :key="tool.id"
         :icon="tool.icon"
         :label="tool.label"
-        :active="state.selectedTool === tool.id"
-        @click="selectTool(tool.id)"
+        :active="editor.selectedTool === tool.id"
+        @click="editor.selectTool(tool.id)"
       />
     </div>
     <div class="tool-group">
@@ -39,7 +39,7 @@ const historyTools = [
         :key="tool.id"
         :icon="tool.icon"
         :label="tool.label"
-        @click="selectTool(tool.id)"
+        @click="editor.selectTool(tool.id)"
       />
     </div>
   </aside>

@@ -1,9 +1,7 @@
 <script setup>
-import { computed } from 'vue'
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 
-const { state } = useEditor()
-const disabled = computed(() => !state.image)
+const editor = useEditorStore()
 
 const emit = defineEmits(['rotate-left', 'rotate-right', 'flip-h', 'flip-v'])
 </script>
@@ -12,10 +10,10 @@ const emit = defineEmits(['rotate-left', 'rotate-right', 'flip-h', 'flip-v'])
   <section class="panel-section">
     <h3 class="panel-title">Transform</h3>
     <div class="transform-actions">
-      <button class="btn btn-small btn-secondary" :disabled="disabled" @click="emit('rotate-left')">Rotate L</button>
-      <button class="btn btn-small btn-secondary" :disabled="disabled" @click="emit('rotate-right')">Rotate R</button>
-      <button class="btn btn-small btn-secondary" :disabled="disabled" @click="emit('flip-h')">Flip H</button>
-      <button class="btn btn-small btn-secondary" :disabled="disabled" @click="emit('flip-v')">Flip V</button>
+      <button class="btn btn-small btn-secondary" :disabled="!editor.hasImage" @click="emit('rotate-left')">Rotate L</button>
+      <button class="btn btn-small btn-secondary" :disabled="!editor.hasImage" @click="emit('rotate-right')">Rotate R</button>
+      <button class="btn btn-small btn-secondary" :disabled="!editor.hasImage" @click="emit('flip-h')">Flip H</button>
+      <button class="btn btn-small btn-secondary" :disabled="!editor.hasImage" @click="emit('flip-v')">Flip V</button>
     </div>
   </section>
 </template>

@@ -1,11 +1,8 @@
 <script setup>
-import { computed } from 'vue'
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentSlider from './AdjustmentSlider.vue'
 
-const { state, updateAdjustment } = useEditor()
-
-const disabled = computed(() => !state.image)
+const editor = useEditorStore()
 
 const sliders = [
   { key: 'brightness', label: 'Brightness', min: -100, max: 100 },
@@ -25,9 +22,9 @@ const sliders = [
       :label="slider.label"
       :min="slider.min"
       :max="slider.max"
-      :model-value="state.adjustments[slider.key]"
-      :disabled="disabled"
-      @update:model-value="updateAdjustment(slider.key, $event)"
+      :model-value="editor.adjustments[slider.key]"
+      :disabled="!editor.hasImage"
+      @update:model-value="editor.updateAdjustment(slider.key, $event)"
     />
   </section>
 </template>

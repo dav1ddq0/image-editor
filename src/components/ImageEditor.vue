@@ -1,11 +1,11 @@
 <script setup>
-import { useEditor } from '@/composables/useEditor'
-import AppNavbar    from './navbar/AppNavbar.vue'
-import AppToolbar   from './toolbar/AppToolbar.vue'
-import CanvasArea   from './canvas/CanvasArea.vue'
-import RightPanel   from './panels/RightPanel.vue'
+import { useEditorStore } from '@/stores/editorStore'
+import AppNavbar  from './navbar/AppNavbar.vue'
+import AppToolbar from './toolbar/AppToolbar.vue'
+import CanvasArea from './canvas/CanvasArea.vue'
+import RightPanel from './panels/RightPanel.vue'
 
-const { loadImage } = useEditor()
+const editor = useEditorStore()
 
 // Hidden file input trick to open the OS file picker
 function openImage() {
@@ -14,7 +14,7 @@ function openImage() {
   input.accept = 'image/*'
   input.onchange = (e) => {
     const file = e.target.files?.[0]
-    if (file) loadImage(file)
+    if (file) editor.loadImage(file)
   }
   input.click()
 }

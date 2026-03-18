@@ -1,14 +1,14 @@
 <script setup>
 import { ref } from 'vue'
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 
-const { loadImage } = useEditor()
+const editor = useEditorStore()
 const isDragging = ref(false)
 
 function onDrop(event) {
   isDragging.value = false
   const file = event.dataTransfer?.files?.[0]
-  if (file && file.type.startsWith('image/')) loadImage(file)
+  if (file && file.type.startsWith('image/')) editor.loadImage(file)
 }
 </script>
 

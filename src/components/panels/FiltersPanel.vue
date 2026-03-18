@@ -1,8 +1,8 @@
 <script setup>
-import { useEditor } from '@/composables/useEditor'
+import { useEditorStore } from '@/stores/editorStore'
 import FilterThumb from './FilterThumb.vue'
 
-const { state, selectFilter } = useEditor()
+const editor = useEditorStore()
 
 const filters = [
   { id: 'none',      label: 'None' },
@@ -23,8 +23,8 @@ const filters = [
         :key="filter.id"
         :id="filter.id"
         :label="filter.label"
-        :active="state.selectedFilter === filter.id"
-        @select="selectFilter"
+        :active="editor.selectedFilter === filter.id"
+        @select="editor.selectFilter"
       />
     </div>
   </section>
