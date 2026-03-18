@@ -15,6 +15,8 @@ export const useEditorStore = defineStore('editor', () => {
   const selectedTool   = ref<ToolId>('select')
   const zoom           = ref<number>(100)
   const image          = ref<ImageDescriptor | null>(null)
+  // The first descriptor created by loadImage; used by resetImage to restore the original.
+  const originalImage  = ref<ImageDescriptor | null>(null)
   const selectedFilter = ref<FilterId>('none')
 
   // rotation is always a multiple of 90, stored in degrees (0 | 90 | 180 | 270)
@@ -97,12 +99,14 @@ export const useEditorStore = defineStore('editor', () => {
     const img = new Image()
 
     img.onload = () => {
-      image.value = {
+      const descriptor: ImageDescriptor = {
         src:    url,
         width:  img.naturalWidth,
         height: img.naturalHeight,
         name:   file.name,
       }
+      image.value         = descriptor
+      originalImage.value = descriptor
     }
 
     img.src = url
@@ -181,6 +185,21 @@ export const useEditorStore = defineStore('editor', () => {
   function setCropPreset(p: AspectPreset): void { cropPreset.value = p }
   function toggleCropLock(): void { cropLocked.value = !cropLocked.value }
 
+  // Restores the original loaded image and resets every non-destructive edit.
+  function resetImage(): void {
+    if (!originalImage.value) return
+    if (image.value && image.value !== originalImage.value && image.value.src.startsWith('blob:'))
+      URL.revokeObjectURL(image.value.src)
+    image.value          = originalImage.value
+    rotation.value       = 0
+    flipH.value          = false
+    flipV.value          = false
+    selectedFilter.value = 'none'
+    selectedTool.value   = 'select'
+    zoom.value           = 100
+    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
   return {
     selectedTool,
@@ -211,5 +230,6 @@ export const useEditorStore = defineStore('editor', () => {
     applyCrop,
     setCropPreset,
     toggleCropLock,
+    resetImage,
   }
 })

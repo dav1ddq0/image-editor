@@ -51,6 +51,7 @@ body {
 
 .btn-primary   { background: var(--color-accent);  color: #fff; }
 .btn-secondary { background: var(--color-border);  color: var(--color-text); }
+.btn-danger    { background: #c0392b;              color: #fff; }
 .btn-small     { padding: 5px 10px; font-size: 0.78rem; }
 
 /* ── Shared panel primitives ───────────────────────────────── */
