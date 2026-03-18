@@ -1,7 +1,7 @@
 <!--
   ImageEditor.vue
-  Root layout component. Composes the top-level page structure and bridges the
-  AppNavbar "open" event to the store's loadImage action via a transient file input.
+  Root layout component. Composes the top-level page structure and handles
+  file open and save/export operations on behalf of the child components.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
@@ -27,11 +27,44 @@ function openImage(): void {
 
   input.click()
 }
+
+function saveImage(): void {
+  if (!editor.image) return
+
+  const source = editor.image
+  const img = new Image()
+
+  img.onload = () => {
+    // Draw at the original resolution so no quality is lost
+    const canvas = document.createElement('canvas')
+    canvas.width  = img.naturalWidth
+    canvas.height = img.naturalHeight
+
+    const ctx = canvas.getContext('2d')!
+
+    // ctx.filter mirrors the CSS filter API, so the saved file exactly
+    // matches what the user sees on screen
+    ctx.filter = editor.cssFilter || 'none'
+    ctx.drawImage(img, 0, 0)
+
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      const a   = document.createElement('a')
+      a.href     = url
+      a.download = source.name
+      a.click()
+      URL.revokeObjectURL(url)
+    }, 'image/png')
+  }
+
+  img.src = source.src
+}
 </script>
 
 <template>
   <div class="editor-layout">
-    <AppNavbar @open="openImage" />
+    <AppNavbar @open="openImage" @save="saveImage" />
 
     <div class="editor-body">
       <AppToolbar />
