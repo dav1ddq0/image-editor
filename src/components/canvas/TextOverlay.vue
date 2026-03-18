@@ -389,4 +389,16 @@ function confirm(): void {
 }
 
 .text-input::placeholder { color: var(--color-subtle); }
+
+@media (max-width: 639px) {
+  .text-toolbar {
+    top: auto;
+    bottom: -52px;
+    left: 0;
+    transform: none;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+  }
+}
 </style>

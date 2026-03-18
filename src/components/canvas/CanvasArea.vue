@@ -222,4 +222,9 @@ const sharpenKernel = computed<string>(() => {
   display: inline-block;
   line-height: 0;
 }
+
+@media (max-width: 639px) {
+  .canvas-area { order: 1; }
+  .canvas-container { padding: 12px; }
+}
 </style>

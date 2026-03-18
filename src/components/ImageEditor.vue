@@ -17,6 +17,7 @@ import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
 const showExportDialog = ref(false)
+const panelOpen = ref(false)
 
 function onKeyDown(e: KeyboardEvent): void {
   if (!e.ctrlKey && !e.metaKey) return
@@ -117,13 +118,21 @@ function exportImage(options: ExportOptions): void {
 
 <template>
   <div class="editor-layout">
-    <AppNavbar @open="openImage" @save="saveImage" @export="showExportDialog = true" />
+    <AppNavbar
+      @open="openImage"
+      @save="saveImage"
+      @export="showExportDialog = true"
+      @toggle-panel="panelOpen = !panelOpen"
+    />
 
     <div class="editor-body">
       <AppToolbar />
       <CanvasArea />
-      <RightPanel />
+      <RightPanel :panel-open="panelOpen" @close-panel="panelOpen = false" />
     </div>
+
+    <!-- Mobile backdrop: closes the panel when tapped -->
+    <div v-if="panelOpen" class="panel-backdrop" @click="panelOpen = false" />
 
     <ExportDialog
       v-model:visible="showExportDialog"
@@ -144,5 +153,24 @@ function exportImage(options: ExportOptions): void {
   display: flex;
   flex: 1;
   overflow: hidden;
+}
+
+/* Mobile backdrop behind the right-panel overlay */
+.panel-backdrop {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .editor-body {
+    flex-direction: column;
+  }
+
+  .panel-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
 }
 </style>

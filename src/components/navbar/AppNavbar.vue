@@ -4,7 +4,7 @@
   so that ImageEditor.vue owns all business logic responses.
 -->
 <script setup lang="ts">
-const emit = defineEmits<{ open: []; save: []; export: [] }>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'toggle-panel': [] }>()
 </script>
 
 <template>
@@ -19,6 +19,7 @@ const emit = defineEmits<{ open: []; save: []; export: [] }>()
       <button class="btn btn-secondary" @click="emit('open')">Open Image</button>
       <button class="btn btn-primary"   @click="emit('save')">Save</button>
       <button class="btn btn-secondary" @click="emit('export')">Export</button>
+      <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
     </nav>
 
   </header>
@@ -51,5 +52,21 @@ const emit = defineEmits<{ open: []; save: []; export: [] }>()
 .navbar-actions {
   display: flex;
   gap: 10px;
+}
+
+/* Only show on mobile */
+.panel-toggle { display: none; }
+
+@media (max-width: 639px) {
+  .navbar { height: 48px; padding: 0 12px; }
+  .brand-name { display: none; }
+  .navbar-actions { gap: 6px; }
+  .btn { padding: 5px 10px; font-size: 0.75rem; }
+  .panel-toggle { display: flex; align-items: center; justify-content: center; }
+}
+
+@media (max-width: 360px) {
+  /* Extra small: hide Save label, keep Export as icon-only */
+  .navbar-actions .btn:not(.panel-toggle) { padding: 5px 8px; }
 }
 </style>

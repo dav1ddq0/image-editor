@@ -288,4 +288,16 @@ function close(): void {
   padding: 16px 20px;
   border-top: 1px solid var(--color-border);
 }
+
+@media (max-width: 639px) {
+  .overlay { align-items: flex-end; }
+
+  .dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
 </style>

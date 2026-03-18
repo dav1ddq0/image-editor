@@ -121,4 +121,11 @@ function stepZoomOut(): void {
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
+
+@media (max-width: 639px) {
+  .statusbar { gap: 10px; padding: 0 10px; font-size: 0.72rem; }
+  .divider   { display: none; }
+  /* Hide the dimensions readout on small screens */
+  .statusbar > span:last-child { display: none; }
+}
 </style>

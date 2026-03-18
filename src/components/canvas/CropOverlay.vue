@@ -334,4 +334,13 @@ function applyHandler() {
 .lock-btn.active { border-color: var(--color-accent); }
 
 .spacer { flex: 1; }
+
+@media (max-width: 639px) {
+  .crop-controls {
+    bottom: -64px;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+  }
+}
 </style>

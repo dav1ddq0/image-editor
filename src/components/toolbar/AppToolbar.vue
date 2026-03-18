@@ -73,4 +73,35 @@ const drawingTools: ToolDefinition[] = [
 .tool-group:last-child {
   border-bottom: none;
 }
+
+@media (max-width: 639px) {
+  .toolbar {
+    width: 100%;
+    height: 52px;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 8px;
+    gap: 0;
+    order: 2;           /* sits below CanvasArea */
+    flex-shrink: 0;
+  }
+
+  .tool-group {
+    flex-direction: row;
+    border-bottom: none;
+    border-right: 1px solid var(--color-border);
+    padding: 0 6px;
+    width: auto;
+    gap: 2px;
+  }
+
+  .tool-group:last-child { border-right: none; }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .toolbar { width: 48px; }
+}
 </style>
