@@ -190,13 +190,13 @@ export const useEditorStore = defineStore('editor', () => {
     if (!originalImage.value) return
     if (image.value && image.value !== originalImage.value && image.value.src.startsWith('blob:'))
       URL.revokeObjectURL(image.value.src)
-    image.value          = originalImage.value
+    // Spread into a new object so CanvasArea's image watcher always fires and re-fits zoom.
+    image.value          = { ...originalImage.value }
     rotation.value       = 0
     flipH.value          = false
     flipV.value          = false
     selectedFilter.value = 'none'
     selectedTool.value   = 'select'
-    zoom.value           = 100
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 

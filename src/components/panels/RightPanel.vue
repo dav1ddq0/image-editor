@@ -4,9 +4,12 @@
   Each sub-panel manages its own store interactions independently.
 -->
 <script setup lang="ts">
+import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentsPanel from './AdjustmentsPanel.vue'
 import FiltersPanel from './FiltersPanel.vue'
 import TransformPanel from './TransformPanel.vue'
+
+const editor = useEditorStore()
 </script>
 
 <template>
@@ -14,6 +17,16 @@ import TransformPanel from './TransformPanel.vue'
     <AdjustmentsPanel />
     <FiltersPanel />
     <TransformPanel />
+
+    <div class="reset-section">
+      <button
+        class="btn btn-danger reset-btn"
+        :disabled="!editor.hasImage"
+        @click="editor.resetImage()"
+      >
+        Reset to Original
+      </button>
+    </div>
   </aside>
 </template>
 
@@ -24,5 +37,13 @@ import TransformPanel from './TransformPanel.vue'
   border-left: 1px solid var(--color-border);
   overflow-y: auto;
   flex-shrink: 0;
+}
+
+.reset-section {
+  padding: 16px;
+}
+
+.reset-btn {
+  width: 100%;
 }
 </style>

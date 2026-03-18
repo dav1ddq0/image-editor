@@ -4,10 +4,7 @@
   so that ImageEditor.vue owns all business logic responses.
 -->
 <script setup lang="ts">
-import { useEditorStore } from '@/stores/editorStore'
-
-const emit   = defineEmits<{ open: []; save: []; export: [] }>()
-const editor = useEditorStore()
+const emit = defineEmits<{ open: []; save: []; export: [] }>()
 </script>
 
 <template>
@@ -20,11 +17,6 @@ const editor = useEditorStore()
 
     <nav class="navbar-actions">
       <button class="btn btn-secondary" @click="emit('open')">Open Image</button>
-      <button
-        class="btn btn-danger"
-        :disabled="!editor.hasImage"
-        @click="editor.resetImage()"
-      >Reset</button>
       <button class="btn btn-primary"   @click="emit('save')">Save</button>
       <button class="btn btn-secondary" @click="emit('export')">Export</button>
     </nav>
