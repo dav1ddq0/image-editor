@@ -3,7 +3,7 @@
   Scrollable right-side wrapper that composes the three editing sub-panels.
   Each sub-panel manages its own store interactions independently.
 -->
-<script setup>
+<script setup lang="ts">
 import AdjustmentsPanel from './AdjustmentsPanel.vue'
 import FiltersPanel from './FiltersPanel.vue'
 import TransformPanel from './TransformPanel.vue'

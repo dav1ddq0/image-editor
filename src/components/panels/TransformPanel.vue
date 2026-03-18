@@ -3,12 +3,17 @@
   Right-panel section with rotate and flip action buttons. Emits events upward
   rather than applying transforms directly, keeping it decoupled from canvas logic.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 
 const editor = useEditorStore()
 
-const emit = defineEmits(['rotate-left', 'rotate-right', 'flip-h', 'flip-v'])
+const emit = defineEmits<{
+  'rotate-left':  []
+  'rotate-right': []
+  'flip-h':       []
+  'flip-v':       []
+}>()
 </script>
 
 <template>

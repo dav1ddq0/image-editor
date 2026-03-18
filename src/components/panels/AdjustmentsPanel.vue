@@ -3,14 +3,22 @@
   Right-panel section with sliders for tone and color adjustments. Disables all
   sliders when no image is loaded to prevent meaningless edits.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentSlider from './AdjustmentSlider.vue'
+import type { AdjustmentKey } from '@/types/editor'
+
+interface SliderConfig {
+  key:   AdjustmentKey
+  label: string
+  min:   number
+  max:   number
+}
 
 const editor = useEditorStore()
 
 // brightness/contrast/saturation allow negative values; sharpness/blur do not
-const sliders = [
+const sliders: SliderConfig[] = [
   { key: 'brightness', label: 'Brightness', min: -100, max: 100 },
   { key: 'contrast',   label: 'Contrast',   min: -100, max: 100 },
   { key: 'saturation', label: 'Saturation', min: -100, max: 100 },

@@ -3,7 +3,7 @@
   Root layout component. Composes the top-level page structure and bridges the
   AppNavbar "open" event to the store's loadImage action via a transient file input.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import AppNavbar  from './navbar/AppNavbar.vue'
 import AppToolbar from './toolbar/AppToolbar.vue'
@@ -12,7 +12,7 @@ import RightPanel from './panels/RightPanel.vue'
 
 const editor = useEditorStore()
 
-function openImage() {
+function openImage(): void {
   // A transient <input type="file"> is created in memory and never appended to
   // the DOM — this is the standard technique for triggering the OS file picker
   // programmatically without a persistent element in the template.
@@ -20,8 +20,8 @@ function openImage() {
   input.type = 'file'
   input.accept = 'image/*'
 
-  input.onchange = (e) => {
-    const file = e.target.files?.[0]
+  input.onchange = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0]
     if (file) editor.loadImage(file)
   }
 

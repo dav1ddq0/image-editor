@@ -3,13 +3,14 @@
   Vertical left-side toolbar. Renders drawing tools and history tools in separate
   groups; reads selectedTool from the store to highlight the active tool.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import ToolButton from './ToolButton.vue'
+import type { ToolDefinition } from '@/types/editor'
 
 const editor = useEditorStore()
 
-const drawingTools = [
+const drawingTools: ToolDefinition[] = [
   { id: 'select', icon: '↖', label: 'Select' },
   { id: 'crop',   icon: '⊡', label: 'Crop' },
   { id: 'brush',  icon: '🖌', label: 'Brush' },
@@ -21,7 +22,7 @@ const drawingTools = [
 ]
 
 // Undo/redo are action triggers, not mode selectors, so they have no :active binding
-const historyTools = [
+const historyTools: ToolDefinition[] = [
   { id: 'undo', icon: '↩', label: 'Undo' },
   { id: 'redo', icon: '↪', label: 'Redo' },
 ]

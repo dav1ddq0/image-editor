@@ -3,7 +3,7 @@
   Central workspace. Shows CanvasDropZone when no image is loaded, the image
   itself once one is available, and CanvasStatusBar at the bottom.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'

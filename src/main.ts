@@ -1,5 +1,5 @@
 /*
- * main.js
+ * main.ts
  * Application entry point. Bootstraps Vue, registers Pinia, and mounts the app.
  */
 

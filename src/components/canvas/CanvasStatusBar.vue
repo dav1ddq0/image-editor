@@ -3,12 +3,17 @@
   Thin read-only footer showing zoom level, file name, and image dimensions.
   Purely presentational; all data arrives via props from CanvasArea.
 -->
-<script setup>
-defineProps({
-  zoom:        { type: Number, default: 100 },
-  imageWidth:  { type: Number, default: null },
-  imageHeight: { type: Number, default: null },
-  imageName:   { type: String, default: null },
+<script setup lang="ts">
+withDefaults(defineProps<{
+  zoom:         number
+  imageWidth?:  number | null
+  imageHeight?: number | null
+  imageName?:   string | null
+}>(), {
+  zoom:        100,
+  imageWidth:  null,
+  imageHeight: null,
+  imageName:   null,
 })
 </script>
 

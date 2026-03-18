@@ -4,16 +4,21 @@
   Implements the v-model contract; emits a typed Number to avoid string/number
   drift that arises from native HTML input events.
 -->
-<script setup>
-const props = defineProps({
-  label:      { type: String,  required: true },
-  modelValue: { type: Number,  default: 0 },
-  min:        { type: Number,  default: -100 },
-  max:        { type: Number,  default: 100 },
-  disabled:   { type: Boolean, default: false },
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  label:       string
+  modelValue?: number
+  min?:        number
+  max?:        number
+  disabled?:   boolean
+}>(), {
+  modelValue: 0,
+  min:        -100,
+  max:        100,
+  disabled:   false,
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
 </script>
 
 <template>

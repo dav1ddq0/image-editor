@@ -3,14 +3,15 @@
   Right-panel section with a grid of filter preset thumbnails. Reads
   selectedFilter from the store to highlight the active tile.
 -->
-<script setup>
+<script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import FilterThumb from './FilterThumb.vue'
+import type { FilterDefinition } from '@/types/editor'
 
 const editor = useEditorStore()
 
 // id doubles as a CSS class on FilterThumb to apply each filter's preview style
-const filters = [
+const filters: FilterDefinition[] = [
   { id: 'none',      label: 'None' },
   { id: 'sepia',     label: 'Sepia' },
   { id: 'grayscale', label: 'B&W' },

@@ -3,16 +3,16 @@
   Single reusable icon button for the toolbar palette. Highlights when active
   and emits 'click' upward, staying decoupled from the store.
 -->
-<script setup>
-defineProps({
-  icon:    { type: String,  required: true },
-  label:   { type: String,  required: true },
-  active:  { type: Boolean, default: false },
-})
+<script setup lang="ts">
+withDefaults(defineProps<{
+  icon:   string
+  label:  string
+  active?: boolean
+}>(), { active: false })
 
 // Re-emit rather than calling the store directly so this component stays
 // decoupled from any specific store implementation.
-const emit = defineEmits(['click'])
+const emit = defineEmits<{ click: [] }>()
 </script>
 
 <template>

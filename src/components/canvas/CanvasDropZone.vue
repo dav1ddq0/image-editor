@@ -3,14 +3,14 @@
   Empty-state drop target shown when no image is loaded. Provides drag-over
   feedback and validates that the dropped file is an image before loading it.
 -->
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 
 const editor = useEditorStore()
-const isDragging = ref(false)
+const isDragging = ref<boolean>(false)
 
-function onDrop(event) {
+function onDrop(event: DragEvent): void {
   // isDragging must be reset here — dragleave does not fire on a successful drop,
   // so the hover style would otherwise stay on permanently after a file is dropped.
   isDragging.value = false

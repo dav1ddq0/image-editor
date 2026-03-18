@@ -3,8 +3,12 @@
   Top navigation bar. Renders the brand and action buttons; emits events upward
   so that ImageEditor.vue owns all business logic responses.
 -->
-<script setup>
-const emit = defineEmits(['open', 'save', 'export'])
+<script setup lang="ts">
+const emit = defineEmits<{
+  open:   []
+  save:   []
+  export: []
+}>()
 </script>
 
 <template>

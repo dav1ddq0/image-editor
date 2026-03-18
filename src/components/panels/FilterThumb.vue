@@ -3,15 +3,17 @@
   Clickable filter preset tile. Applies an accent border when active and emits
   'select' upward so FiltersPanel stays decoupled from the store.
 -->
-<script setup>
-// `id` doubles as a CSS class name so scoped styles can target each preset individually
-defineProps({
-  id:     { type: String,  required: true },
-  label:  { type: String,  required: true },
-  active: { type: Boolean, default: false },
-})
+<script setup lang="ts">
+import type { FilterId } from '@/types/editor'
 
-const emit = defineEmits(['select'])
+// `id` doubles as a CSS class name so scoped styles can target each preset individually
+withDefaults(defineProps<{
+  id:      FilterId
+  label:   string
+  active?: boolean
+}>(), { active: false })
+
+const emit = defineEmits<{ select: [id: FilterId] }>()
 </script>
 
 <template>

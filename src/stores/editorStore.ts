@@ -1,24 +1,22 @@
 /*
- * editorStore.js
+ * editorStore.ts
  * Single source of truth for the image editor: active tool, zoom, loaded image,
  * filter preset, and all adjustment values.
  */
 
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
+import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey } from '@/types/editor'
 
 export const useEditorStore = defineStore('editor', () => {
   // ── State ──────────────────────────────────────────────────────────────────
 
-  const selectedTool   = ref('select')
-  const zoom           = ref(100)
+  const selectedTool   = ref<ToolId>('select')
+  const zoom           = ref<number>(100)
+  const image          = ref<ImageDescriptor | null>(null)
+  const selectedFilter = ref<FilterId>('none')
 
-  // Shape: { src: string, width: number, height: number, name: string }
-  const image          = ref(null)
-
-  const selectedFilter = ref('none')
-
-  const adjustments = reactive({
+  const adjustments = reactive<Adjustments>({
     brightness: 0,
     contrast:   0,
     saturation: 0,
@@ -28,15 +26,15 @@ export const useEditorStore = defineStore('editor', () => {
 
   // ── Getters (computed) ─────────────────────────────────────────────────────
 
-  const hasImage = computed(() => !!image.value)
+  const hasImage = computed<boolean>(() => !!image.value)
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  function selectTool(tool) {
+  function selectTool(tool: ToolId): void {
     selectedTool.value = tool
   }
 
-  function loadImage(file) {
+  function loadImage(file: File): void {
     const url = URL.createObjectURL(file)
     // Blob URL is intentionally never revoked — it is the canonical image source
     // for the lifetime of the session and must remain valid for the <img> element.
@@ -56,16 +54,16 @@ export const useEditorStore = defineStore('editor', () => {
     img.src = url
   }
 
-  function updateAdjustment(key, value) {
+  function updateAdjustment(key: AdjustmentKey, value: number): void {
     // Number() cast guards against string values emitted by HTML range inputs
     adjustments[key] = Number(value)
   }
 
-  function selectFilter(filter) {
+  function selectFilter(filter: FilterId): void {
     selectedFilter.value = filter
   }
 
-  function setZoom(value) {
+  function setZoom(value: number): void {
     zoom.value = value
   }
 
