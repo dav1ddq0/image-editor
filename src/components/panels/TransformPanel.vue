@@ -1,19 +1,11 @@
 <!--
   TransformPanel.vue
-  Right-panel section with rotate and flip action buttons. Emits events upward
-  rather than applying transforms directly, keeping it decoupled from canvas logic.
+  Right-panel section with rotate and flip action buttons.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 
 const editor = useEditorStore()
-
-const emit = defineEmits<{
-  'rotate-left':  []
-  'rotate-right': []
-  'flip-h':       []
-  'flip-v':       []
-}>()
 </script>
 
 <template>
@@ -25,25 +17,25 @@ const emit = defineEmits<{
       <button
         class="btn btn-small btn-secondary"
         :disabled="!editor.hasImage"
-        @click="emit('rotate-left')"
+        @click="editor.rotateLeft()"
       >Rotate L</button>
 
       <button
         class="btn btn-small btn-secondary"
         :disabled="!editor.hasImage"
-        @click="emit('rotate-right')"
+        @click="editor.rotateRight()"
       >Rotate R</button>
 
       <button
         class="btn btn-small btn-secondary"
         :disabled="!editor.hasImage"
-        @click="emit('flip-h')"
+        @click="editor.flipHorizontal()"
       >Flip H</button>
 
       <button
         class="btn btn-small btn-secondary"
         :disabled="!editor.hasImage"
-        @click="emit('flip-v')"
+        @click="editor.flipVertical()"
       >Flip V</button>
     </div>
 

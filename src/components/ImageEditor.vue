@@ -31,21 +31,32 @@ function openImage(): void {
 function saveImage(): void {
   if (!editor.image) return
 
-  const source = editor.image
-  const img = new Image()
+  const source   = editor.image
+  const rotation = editor.rotation
+  const img      = new Image()
 
   img.onload = () => {
-    // Draw at the original resolution so no quality is lost
-    const canvas = document.createElement('canvas')
-    canvas.width  = img.naturalWidth
-    canvas.height = img.naturalHeight
+    const w = img.naturalWidth
+    const h = img.naturalHeight
+
+    // When rotated 90° or 270° the output dimensions are swapped
+    const isOdd    = rotation === 90 || rotation === 270
+    const canvas   = document.createElement('canvas')
+    canvas.width   = isOdd ? h : w
+    canvas.height  = isOdd ? w : h
 
     const ctx = canvas.getContext('2d')!
 
-    // ctx.filter mirrors the CSS filter API, so the saved file exactly
-    // matches what the user sees on screen
+    // Apply filter first so it is baked into the exported pixels
     ctx.filter = editor.cssFilter || 'none'
-    ctx.drawImage(img, 0, 0)
+
+    // Translate to canvas center, rotate, then apply flip scales
+    ctx.translate(canvas.width / 2, canvas.height / 2)
+    ctx.rotate((rotation * Math.PI) / 180)
+    ctx.scale(editor.flipH ? -1 : 1, editor.flipV ? -1 : 1)
+
+    // Draw the image centered at the (now transformed) origin
+    ctx.drawImage(img, -w / 2, -h / 2)
 
     canvas.toBlob((blob) => {
       if (!blob) return

@@ -16,6 +16,11 @@ export const useEditorStore = defineStore('editor', () => {
   const image          = ref<ImageDescriptor | null>(null)
   const selectedFilter = ref<FilterId>('none')
 
+  // rotation is always a multiple of 90, stored in degrees (0 | 90 | 180 | 270)
+  const rotation = ref<number>(0)
+  const flipH    = ref<boolean>(false)
+  const flipV    = ref<boolean>(false)
+
   const adjustments = reactive<Adjustments>({
     brightness: 0,
     contrast:   0,
@@ -27,6 +32,15 @@ export const useEditorStore = defineStore('editor', () => {
   // ── Getters (computed) ─────────────────────────────────────────────────────
 
   const hasImage = computed<boolean>(() => !!image.value)
+
+  // Combines rotation and flip into a single CSS transform string
+  const cssTransform = computed<string>(() => {
+    const parts: string[] = []
+    if (rotation.value !== 0)  parts.push(`rotate(${rotation.value}deg)`)
+    if (flipH.value)           parts.push('scaleX(-1)')
+    if (flipV.value)           parts.push('scaleY(-1)')
+    return parts.join(' ')
+  })
 
   // Builds the CSS filter string applied to the canvas image.
   // Preset filters are combined with the numeric adjustment sliders so both
@@ -91,6 +105,22 @@ export const useEditorStore = defineStore('editor', () => {
     adjustments[key] = Number(value)
   }
 
+  function rotateLeft(): void {
+    rotation.value = (rotation.value - 90 + 360) % 360
+  }
+
+  function rotateRight(): void {
+    rotation.value = (rotation.value + 90) % 360
+  }
+
+  function flipHorizontal(): void {
+    flipH.value = !flipH.value
+  }
+
+  function flipVertical(): void {
+    flipV.value = !flipV.value
+  }
+
   function selectFilter(filter: FilterId): void {
     selectedFilter.value = filter
   }
@@ -105,13 +135,21 @@ export const useEditorStore = defineStore('editor', () => {
     zoom,
     image,
     selectedFilter,
+    rotation,
+    flipH,
+    flipV,
     adjustments,
     hasImage,
     cssFilter,
+    cssTransform,
     selectTool,
     loadImage,
     updateAdjustment,
     selectFilter,
     setZoom,
+    rotateLeft,
+    rotateRight,
+    flipHorizontal,
+    flipVertical,
   }
 })
