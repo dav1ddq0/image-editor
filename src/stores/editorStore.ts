@@ -134,8 +134,12 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   function setZoom(value: number): void {
-    zoom.value = value
+    zoom.value = Math.min(500, Math.max(10, Math.round(value)))
   }
+
+  function zoomIn(): void  { setZoom(zoom.value + 25) }
+  function zoomOut(): void { setZoom(zoom.value - 25) }
+  function zoomReset(): void { zoom.value = 100 }
 
   function applyCrop(normalizedRect: CropRect): void {
     if (!image.value) return
@@ -197,6 +201,9 @@ export const useEditorStore = defineStore('editor', () => {
     updateAdjustment,
     selectFilter,
     setZoom,
+    zoomIn,
+    zoomOut,
+    zoomReset,
     rotateLeft,
     rotateRight,
     flipHorizontal,

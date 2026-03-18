@@ -14,6 +14,7 @@ import type { CropRect } from '@/types/editor'
 const editor = useEditorStore()
 
 const isCropping = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
+const isZooming  = computed(() => editor.selectedTool === 'zoom' && editor.hasImage)
 const imgRef     = ref<HTMLImageElement>()
 const displayW   = ref(0)
 const displayH   = ref(0)
@@ -43,6 +44,20 @@ function handleCropApply(rect: CropRect) {
   editor.applyCrop(rect)
 }
 
+// Mouse-wheel zooms the canvas; each notch = 10 pp, clamped in the store.
+function onWheel(e: WheelEvent): void {
+  if (!editor.hasImage) return
+  e.preventDefault()
+  editor.setZoom(editor.zoom + (e.deltaY < 0 ? 10 : -10))
+}
+
+// Left-click with the zoom tool zooms in; Shift+click zooms out.
+function onContainerClick(e: MouseEvent): void {
+  if (!isZooming.value) return
+  if (e.shiftKey) editor.zoomOut()
+  else            editor.zoomIn()
+}
+
 // Builds the 3×3 unsharp-mask kernel string for feConvolveMatrix.
 // Kernel: [ 0  -s  0 / -s  1+4s  -s / 0  -s  0 ] (divisor = 1, sum = 1 → no brightness shift)
 // At s=0 this is the identity kernel; higher s = stronger edge enhancement.
@@ -70,9 +85,14 @@ const sharpenKernel = computed<string>(() => {
       </defs>
     </svg>
 
-    <div class="canvas-container">
+    <div
+      class="canvas-container"
+      :class="{ 'cursor-zoom-in': isZooming }"
+      @wheel.prevent="onWheel"
+      @click="onContainerClick"
+    >
       <CanvasDropZone v-if="!editor.hasImage" />
-      <div v-else class="image-wrapper">
+      <div v-else class="image-wrapper" :style="{ zoom: editor.zoom / 100 }">
         <img
           ref="imgRef"
           :src="editor.image.src"
@@ -96,7 +116,6 @@ const sharpenKernel = computed<string>(() => {
       loaded; CanvasStatusBar accepts null props and renders fallback text.
     -->
     <CanvasStatusBar
-      :zoom="editor.zoom"
       :image-width="editor.image?.width"
       :image-height="editor.image?.height"
       :image-name="editor.image?.name"
@@ -122,6 +141,8 @@ const sharpenKernel = computed<string>(() => {
   overflow: auto;
   padding: 20px;
 }
+
+.cursor-zoom-in { cursor: zoom-in; }
 
 .canvas-image {
   max-width: 100%;
