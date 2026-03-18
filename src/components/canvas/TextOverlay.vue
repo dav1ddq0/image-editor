@@ -4,14 +4,14 @@
   styled textarea, then confirms to bake the text into the image via applyText.
 -->
 <script setup lang="ts">
-import { ref, computed, nextTick, withDefaults } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type { TextLayer } from '@/types/editor'
 
-const props = withDefaults(defineProps<{
-  imgWidth:     number
-  imgHeight:    number
-  defaultColor: string
-}>(), { defaultColor: '#ffffff' })
+const props = defineProps<{
+  imgWidth:      number
+  imgHeight:     number
+  defaultColor?: string
+}>()
 
 const emit = defineEmits<{
   apply:  [layer: TextLayer]
@@ -28,7 +28,7 @@ const posY        = ref(0)
 const text       = ref('')
 const fontSize   = ref(32)
 const fontFamily = ref('sans-serif')
-const color      = ref(props.defaultColor)
+const color      = ref(props.defaultColor ?? '#ffffff')
 const bold       = ref(false)
 const italic     = ref(false)
 
