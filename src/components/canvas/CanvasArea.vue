@@ -11,6 +11,7 @@ import CanvasStatusBar from './CanvasStatusBar.vue'
 import CropOverlay from './CropOverlay.vue'
 import TextOverlay from './TextOverlay.vue'
 import type { CropRect, TextLayer } from '@/types/editor'
+import { getAutoTextColor } from '@/utils/colorAnalysis'
 
 const editor = useEditorStore()
 
@@ -67,6 +68,21 @@ function handleCropApply(rect: CropRect): void {
 function handleTextApply(layer: TextLayer): void {
   editor.applyText(layer)
 }
+
+// Resolved auto-contrast color; computed before TextOverlay mounts so the
+// initial color is correct without a visible flicker.
+const autoTextColor  = ref<'#ffffff' | '#000000'>('#ffffff')
+const textColorReady = ref(false)
+
+watch(isTexting, async (active) => {
+  if (active && editor.image) {
+    textColorReady.value = false
+    autoTextColor.value  = await getAutoTextColor(editor.image.src)
+    textColorReady.value = true
+  } else {
+    textColorReady.value = false
+  }
+})
 
 // Mouse-wheel zooms the image; each notch = 10 pp, clamped in the store.
 function onWheel(e: WheelEvent): void {
@@ -144,9 +160,10 @@ const sharpenKernel = computed<string>(() => {
             @cancel="editor.selectTool('select')"
           />
           <TextOverlay
-            v-if="isTexting && displayW > 0"
+            v-if="isTexting && displayW > 0 && textColorReady"
             :img-width="displayW"
             :img-height="displayH"
+            :default-color="autoTextColor"
             @apply="handleTextApply"
             @cancel="editor.selectTool('select')"
           />
