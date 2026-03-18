@@ -4,7 +4,7 @@
   itself once one is available, and CanvasStatusBar at the bottom.
 -->
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
@@ -13,14 +13,32 @@ import type { CropRect } from '@/types/editor'
 
 const editor = useEditorStore()
 
-const isCropping = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
-const isZooming  = computed(() => editor.selectedTool === 'zoom' && editor.hasImage)
-const imgRef     = ref<HTMLImageElement>()
-const displayW   = ref(0)
-const displayH   = ref(0)
+const isCropping   = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
+const isZooming    = computed(() => editor.selectedTool === 'zoom' && editor.hasImage)
+const containerRef = ref<HTMLDivElement>()
+const imgRef       = ref<HTMLImageElement>()
+const displayW     = ref(0)
+const displayH     = ref(0)
 let resizeObs: ResizeObserver | null = null
 
-function updateDisplaySize() {
+// When a new image is loaded, auto-calculate a zoom level that fits it in the
+// container (never upscaling beyond 100%).
+watch(() => editor.image, async (img) => {
+  if (!img) return
+  await nextTick()
+  if (!containerRef.value) return
+  const { clientWidth: cw, clientHeight: ch } = containerRef.value
+  const padding = 40
+  const fitScale = Math.min((cw - padding) / img.width, (ch - padding) / img.height, 1)
+  editor.setZoom(Math.round(fitScale * 100))
+})
+
+// Drives the explicit pixel width set on <img>. Height follows via auto.
+const imgPixelWidth = computed(() =>
+  editor.image ? Math.round(editor.image.width * editor.zoom / 100) : 0
+)
+
+function updateDisplaySize(): void {
   if (imgRef.value) {
     displayW.value = imgRef.value.offsetWidth
     displayH.value = imgRef.value.offsetHeight
@@ -40,11 +58,11 @@ watch(isCropping, (active) => {
 
 onUnmounted(() => resizeObs?.disconnect())
 
-function handleCropApply(rect: CropRect) {
+function handleCropApply(rect: CropRect): void {
   editor.applyCrop(rect)
 }
 
-// Mouse-wheel zooms the canvas; each notch = 10 pp, clamped in the store.
+// Mouse-wheel zooms the image; each notch = 10 pp, clamped in the store.
 function onWheel(e: WheelEvent): void {
   if (!editor.hasImage) return
   e.preventDefault()
@@ -86,28 +104,40 @@ const sharpenKernel = computed<string>(() => {
     </svg>
 
     <div
+      ref="containerRef"
       class="canvas-container"
       :class="{ 'cursor-zoom-in': isZooming }"
       @wheel.prevent="onWheel"
       @click="onContainerClick"
     >
       <CanvasDropZone v-if="!editor.hasImage" />
-      <div v-else class="image-wrapper" :style="{ zoom: editor.zoom / 100 }">
-        <img
-          ref="imgRef"
-          :src="editor.image.src"
-          :alt="editor.image.name"
-          :style="{ filter: editor.cssFilter, transform: editor.cssTransform }"
-          class="canvas-image"
-          @load="updateDisplaySize"
-        />
-        <CropOverlay
-          v-if="isCropping && displayW > 0"
-          :img-width="displayW"
-          :img-height="displayH"
-          @apply="handleCropApply"
-          @cancel="editor.selectTool('select')"
-        />
+
+      <!--
+        .image-center stretches to fill the scrollable container and centers the
+        image when it is smaller than the viewport; when larger the container scrolls.
+      -->
+      <div v-else class="image-center">
+        <div class="image-wrapper">
+          <img
+            ref="imgRef"
+            :src="editor.image.src"
+            :alt="editor.image.name"
+            :style="{
+              width:     imgPixelWidth + 'px',
+              filter:    editor.cssFilter,
+              transform: editor.cssTransform,
+            }"
+            class="canvas-image"
+            @load="updateDisplaySize"
+          />
+          <CropOverlay
+            v-if="isCropping && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @apply="handleCropApply"
+            @cancel="editor.selectTool('select')"
+          />
+        </div>
       </div>
     </div>
 
@@ -135,19 +165,24 @@ const sharpenKernel = computed<string>(() => {
 
 .canvas-container {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: auto;
   padding: 20px;
 }
 
 .cursor-zoom-in { cursor: zoom-in; }
 
+/* Fills the scrollable area and centers the image when smaller than the viewport */
+.image-center {
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .canvas-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  display: block;
+  /* Width is set explicitly via inline style; height follows aspect ratio */
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
 }
