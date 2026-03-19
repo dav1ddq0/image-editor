@@ -276,17 +276,24 @@ export const useEditorStore = defineStore('editor', () => {
     }
     const img = new Image()
     img.onload = () => {
-      const canvas = buildRenderedCanvas(img, renderOpts)
-      const ctx    = canvas.getContext('2d')!
-      const x = Math.round(normalizedRect.x * canvas.width)
-      const y = Math.round(normalizedRect.y * canvas.height)
-      const w = Math.round(normalizedRect.w * canvas.width)
-      const h = Math.round(normalizedRect.h * canvas.height)
-      ctx.filter = 'none'   // reset — browsers apply the active filter to clearRect otherwise
+      // Render all effects into a source canvas, then copy into a fresh output
+      // canvas whose context has never had ctx.filter set.  clearRect on a
+      // pristine context is the only reliable way to produce true transparency
+      // (Chromium applies residual filter state to clearRect on the same ctx).
+      const rendered = buildRenderedCanvas(img, renderOpts)
+      const output   = document.createElement('canvas')
+      output.width   = rendered.width
+      output.height  = rendered.height
+      const ctx = output.getContext('2d')!      // ctx.filter is 'none' by default on a fresh context
+      ctx.drawImage(rendered, 0, 0)
+      const x = Math.round(normalizedRect.x * output.width)
+      const y = Math.round(normalizedRect.y * output.height)
+      const w = Math.round(normalizedRect.w * output.width)
+      const h = Math.round(normalizedRect.h * output.height)
       ctx.clearRect(x, y, w, h)
-      canvas.toBlob((blob) => {
+      output.toBlob((blob) => {
         if (!blob) return
-        image.value = { src: URL.createObjectURL(blob), width: canvas.width, height: canvas.height, name: source.name }
+        image.value = { src: URL.createObjectURL(blob), width: output.width, height: output.height, name: source.name }
         rotation.value       = 0
         flipH.value          = false
         flipV.value          = false
