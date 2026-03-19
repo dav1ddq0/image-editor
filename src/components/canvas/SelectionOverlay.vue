@@ -152,8 +152,22 @@ const shadeStyles = computed(() => {
   }
 })
 
-// Position action bar above the selection when < 52 px below it
-const actionBarAbove = computed(() => props.imgHeight - box.value.bottom < 52)
+// Position the action bar in overlay-space so it always stays inside the image
+// bounds and within the overlay's hit area.  Never extend outside imgHeight.
+const ACTION_BAR_H = 44   // approximate bar height including shadow
+const ACTION_BAR_GAP = 8
+
+const actionBarStyle = computed(() => {
+  const cx = (box.value.left + box.value.right) / 2
+  // Prefer below; flip above when not enough room
+  const belowFits = props.imgHeight - box.value.bottom >= ACTION_BAR_H + ACTION_BAR_GAP
+  const rawTop    = belowFits
+    ? box.value.bottom + ACTION_BAR_GAP
+    : box.value.top - ACTION_BAR_H - ACTION_BAR_GAP
+  // Clamp so the bar never exits the overlay vertically
+  const top = Math.max(0, Math.min(props.imgHeight - ACTION_BAR_H, rawTop))
+  return { left: cx + 'px', top: top + 'px', transform: 'translateX(-50%)' }
+})
 
 function toRect(): CropRect {
   return {
@@ -227,20 +241,22 @@ function toRect(): CropRect {
         <div class="handle corner-sw" @pointerdown="onHandlePointerDown($event, 'sw')" />
       </template>
 
-      <!-- Action bar (ready only) -->
-      <div
-        v-if="phase === 'ready'"
-        class="sel-bar"
-        :class="{ 'sel-bar--above': actionBarAbove }"
-        @pointerdown.stop
-        @click.stop
-      >
-        <span class="sel-dims">{{ Math.round(selW) }} × {{ Math.round(selH) }}</span>
-        <div class="sel-sep" />
-        <button class="sel-btn sel-btn--primary" @click="emit('crop', toRect())">Crop</button>
-        <button class="sel-btn" @click="emit('clear', toRect())">Clear</button>
-        <button class="sel-btn sel-btn--cancel" @click="phase = 'idle'">✕</button>
-      </div>
+    </div>
+
+    <!-- Action bar: sibling of sel-box, positioned in overlay space so it always
+         stays within imgWidth × imgHeight and receives pointer events correctly. -->
+    <div
+      v-if="phase === 'ready'"
+      class="sel-bar"
+      :style="actionBarStyle"
+      @pointerdown.stop
+      @click.stop
+    >
+      <span class="sel-dims">{{ Math.round(selW) }} × {{ Math.round(selH) }}</span>
+      <div class="sel-sep" />
+      <button class="sel-btn sel-btn--primary" @click="emit('crop', toRect())">Crop</button>
+      <button class="sel-btn" @click="emit('clear', toRect())">Clear</button>
+      <button class="sel-btn sel-btn--cancel" @click="phase = 'idle'">✕</button>
     </div>
   </div>
 </template>
@@ -303,11 +319,10 @@ function toRect(): CropRect {
 .corner-sw { left: -5px;  bottom: -5px; cursor: sw-resize; }
 
 /* ── Action bar ──────────────────────────────────────────── */
+/* left/top/transform are set via inline :style so the bar stays
+   inside the overlay's imgWidth × imgHeight hit area at all times. */
 .sel-bar {
   position: absolute;
-  bottom: -48px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -318,10 +333,6 @@ function toRect(): CropRect {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
   z-index: 10;
-}
-.sel-bar--above {
-  bottom: auto;
-  top: -48px;
 }
 
 .sel-dims {
@@ -398,17 +409,8 @@ function toRect(): CropRect {
 
 @media (max-width: 639px) {
   .sel-bar {
-    bottom: auto;
-    top: -52px;
-    left: 0;
-    transform: none;
     max-width: calc(100vw - 40px);
     overflow-x: auto;
-    border-radius: var(--radius-sm);
-  }
-  .sel-bar--above {
-    top: auto;
-    bottom: -52px;
   }
 }
 </style>
