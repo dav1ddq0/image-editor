@@ -262,6 +262,41 @@ export const useEditorStore = defineStore('editor', () => {
   function setCropPreset(p: AspectPreset): void { cropPreset.value = p }
   function toggleCropLock(): void { cropLocked.value = !cropLocked.value }
 
+  // Fills the selected region with transparency (alpha = 0) and bakes all effects.
+  function applyClearSelection(normalizedRect: CropRect): void {
+    if (!image.value) return
+    pushHistory()
+    const source = image.value
+    const renderOpts = {
+      cssFilter: cssFilter.value,
+      rotation:  rotation.value,
+      flipH:     flipH.value,
+      flipV:     flipV.value,
+      sharpness: adjustments.sharpness,
+    }
+    const img = new Image()
+    img.onload = () => {
+      const canvas = buildRenderedCanvas(img, renderOpts)
+      const ctx    = canvas.getContext('2d')!
+      const x = Math.round(normalizedRect.x * canvas.width)
+      const y = Math.round(normalizedRect.y * canvas.height)
+      const w = Math.round(normalizedRect.w * canvas.width)
+      const h = Math.round(normalizedRect.h * canvas.height)
+      ctx.clearRect(x, y, w, h)
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        image.value = { src: URL.createObjectURL(blob), width: canvas.width, height: canvas.height, name: source.name }
+        rotation.value       = 0
+        flipH.value          = false
+        flipV.value          = false
+        selectedFilter.value = 'none'
+        selectedTool.value   = 'select'
+        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      }, 'image/png')
+    }
+    img.src = source.src
+  }
+
   // Restores the original loaded image and resets every non-destructive edit.
   function resetImage(): void {
     if (!originalImage.value) return
@@ -389,5 +424,6 @@ export const useEditorStore = defineStore('editor', () => {
     toggleCropLock,
     resetImage,
     applyText,
+    applyClearSelection,
   }
 })

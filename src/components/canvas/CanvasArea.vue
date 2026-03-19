@@ -8,16 +8,18 @@ import { ref, computed, onUnmounted, watch, nextTick } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
-import CropOverlay from './CropOverlay.vue'
-import TextOverlay from './TextOverlay.vue'
+import CropOverlay      from './CropOverlay.vue'
+import TextOverlay      from './TextOverlay.vue'
+import SelectionOverlay from './SelectionOverlay.vue'
 import type { CropRect, TextLayer } from '@/types/editor'
 import { getAutoTextColor } from '@/utils/colorAnalysis'
 
 const editor = useEditorStore()
 
-const isCropping   = computed(() => editor.selectedTool === 'crop' && editor.hasImage)
-const isZooming    = computed(() => editor.selectedTool === 'zoom' && editor.hasImage)
-const isTexting    = computed(() => editor.selectedTool === 'text' && editor.hasImage)
+const isCropping   = computed(() => editor.selectedTool === 'crop'   && editor.hasImage)
+const isZooming    = computed(() => editor.selectedTool === 'zoom'   && editor.hasImage)
+const isTexting    = computed(() => editor.selectedTool === 'text'   && editor.hasImage)
+const isSelecting  = computed(() => editor.selectedTool === 'select' && editor.hasImage)
 const containerRef = ref<HTMLDivElement>()
 const imgRef       = ref<HTMLImageElement>()
 const displayW     = ref(0)
@@ -48,8 +50,8 @@ function updateDisplaySize(): void {
   }
 }
 
-watch([isCropping, isTexting], ([cropping, texting]) => {
-  if ((cropping || texting) && imgRef.value) {
+watch([isCropping, isTexting, isSelecting], ([cropping, texting, selecting]) => {
+  if ((cropping || texting || selecting) && imgRef.value) {
     resizeObs = new ResizeObserver(updateDisplaySize)
     resizeObs.observe(imgRef.value)
     updateDisplaySize()
@@ -67,6 +69,14 @@ function handleCropApply(rect: CropRect): void {
 
 function handleTextApply(layer: TextLayer): void {
   editor.applyText(layer)
+}
+
+function handleSelectionCrop(rect: CropRect): void {
+  editor.applyCrop(rect)
+}
+
+function handleSelectionClear(rect: CropRect): void {
+  editor.applyClearSelection(rect)
 }
 
 // Resolved auto-contrast color; computed before TextOverlay mounts so the
@@ -165,6 +175,14 @@ const sharpenKernel = computed<string>(() => {
             :img-height="displayH"
             :default-color="autoTextColor"
             @apply="handleTextApply"
+            @cancel="editor.selectTool('select')"
+          />
+          <SelectionOverlay
+            v-if="isSelecting && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @crop="handleSelectionCrop"
+            @clear="handleSelectionClear"
             @cancel="editor.selectTool('select')"
           />
         </div>
