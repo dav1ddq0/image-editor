@@ -8,16 +8,68 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { useEditorStore } from '@/stores/editorStore'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
-import AppNavbar    from './navbar/AppNavbar.vue'
-import AppToolbar   from './toolbar/AppToolbar.vue'
-import CanvasArea   from './canvas/CanvasArea.vue'
-import RightPanel   from './panels/RightPanel.vue'
-import ExportDialog from './export/ExportDialog.vue'
+import { scanQrCode }   from '@/utils/qrScanner'
+import { scanBarcode }  from '@/utils/barcodeScanner'
+import AppNavbar         from './navbar/AppNavbar.vue'
+import AppToolbar        from './toolbar/AppToolbar.vue'
+import CanvasArea        from './canvas/CanvasArea.vue'
+import RightPanel        from './panels/RightPanel.vue'
+import ExportDialog      from './export/ExportDialog.vue'
+import QrScanDialog      from './qr/QrScanDialog.vue'
+import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
 import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
 const showExportDialog = ref(false)
-const panelOpen = ref(false)
+const panelOpen        = ref(false)
+
+// ── QR Scanner ──────────────────────────────────────────────────────────────
+const showQrDialog = ref(false)
+const qrState      = ref<'scanning' | 'found' | 'not-found'>('scanning')
+const qrText       = ref('')
+
+async function scanQr(): Promise<void> {
+  if (!editor.image) return
+  qrState.value      = 'scanning'
+  showQrDialog.value = true
+  const result = await scanQrCode(editor.image.src, {
+    cssFilter: editor.cssFilter,
+    rotation:  editor.rotation,
+    flipH:     editor.flipH,
+    flipV:     editor.flipV,
+    sharpness: editor.adjustments.sharpness,
+  })
+  if (result) {
+    qrText.value  = result
+    qrState.value = 'found'
+  } else {
+    qrState.value = 'not-found'
+  }
+}
+
+// ── Barcode Scanner ─────────────────────────────────────────────────────────
+const showBarcodeDialog = ref(false)
+const barcodeState      = ref<'scanning' | 'found' | 'not-found'>('scanning')
+const barcodeText       = ref('')
+
+async function scanBarcodeImage(): Promise<void> {
+  if (!editor.image) return
+  barcodeState.value      = 'scanning'
+  showBarcodeDialog.value = true
+  const result = await scanBarcode(editor.image.src, {
+    cssFilter: editor.cssFilter,
+    rotation:  editor.rotation,
+    flipH:     editor.flipH,
+    flipV:     editor.flipV,
+    sharpness: editor.adjustments.sharpness,
+  })
+  if (result) {
+    barcodeText.value  = result
+    barcodeState.value = 'found'
+  } else {
+    barcodeState.value = 'not-found'
+  }
+}
 
 function onKeyDown(e: KeyboardEvent): void {
   if (!e.ctrlKey && !e.metaKey) return
@@ -119,9 +171,12 @@ function exportImage(options: ExportOptions): void {
 <template>
   <div class="editor-layout">
     <AppNavbar
+      :has-image="editor.hasImage"
       @open="openImage"
       @save="saveImage"
       @export="showExportDialog = true"
+      @scan-qr="scanQr"
+      @scan-barcode="scanBarcodeImage"
       @toggle-panel="panelOpen = !panelOpen"
     />
 
@@ -138,6 +193,18 @@ function exportImage(options: ExportOptions): void {
       v-model:visible="showExportDialog"
       :default-name="editor.image?.name ?? 'image'"
       @export="exportImage"
+    />
+
+    <QrScanDialog
+      v-model:visible="showQrDialog"
+      :state="qrState"
+      :text="qrText"
+    />
+
+    <BarcodeScanDialog
+      v-model:visible="showBarcodeDialog"
+      :state="barcodeState"
+      :text="barcodeText"
     />
   </div>
 </template>

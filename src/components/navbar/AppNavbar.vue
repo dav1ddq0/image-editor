@@ -4,7 +4,8 @@
   so that ImageEditor.vue owns all business logic responses.
 -->
 <script setup lang="ts">
-const emit = defineEmits<{ open: []; save: []; export: []; 'toggle-panel': [] }>()
+defineProps<{ hasImage?: boolean }>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'toggle-panel': [] }>()
 </script>
 
 <template>
@@ -19,6 +20,42 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'toggle-panel': [] }>
       <button class="btn btn-secondary" @click="emit('open')">Open Image</button>
       <button class="btn btn-primary"   @click="emit('save')">Save</button>
       <button class="btn btn-secondary" @click="emit('export')">Export</button>
+      <button
+        class="btn btn-secondary qr-btn"
+        :disabled="!hasImage"
+        title="Scan QR code"
+        @click="emit('scan-qr')"
+      >
+        <svg class="qr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3"  y="3"  width="7" height="7" rx="1" />
+          <rect x="14" y="3"  width="7" height="7" rx="1" />
+          <rect x="3"  y="14" width="7" height="7" rx="1" />
+          <rect x="5"  y="5"  width="3" height="3" fill="currentColor" stroke="none" />
+          <rect x="16" y="5"  width="3" height="3" fill="currentColor" stroke="none" />
+          <rect x="5"  y="16" width="3" height="3" fill="currentColor" stroke="none" />
+          <path d="M14 14h3v3M17 17h3M14 20h3" />
+        </svg>
+        <span class="qr-label">Scan QR</span>
+      </button>
+      <button
+        class="btn btn-secondary bc-btn"
+        :disabled="!hasImage"
+        title="Scan barcode"
+        @click="emit('scan-barcode')"
+      >
+        <svg class="bc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <line x1="4"  y1="4" x2="4"  y2="20" />
+          <line x1="7"  y1="4" x2="7"  y2="20" stroke-width="2.5" />
+          <line x1="10" y1="4" x2="10" y2="20" />
+          <line x1="13" y1="4" x2="13" y2="20" stroke-width="2.5" />
+          <line x1="16" y1="4" x2="16" y2="20" />
+          <line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5" />
+          <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
+        </svg>
+        <span class="bc-label">Scan Barcode</span>
+      </button>
       <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
     </nav>
 
@@ -53,6 +90,24 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'toggle-panel': [] }>
   display: flex;
   gap: 10px;
 }
+
+/* QR scan button */
+.qr-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.qr-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Barcode scan button */
+.bc-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.bc-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* Only show on mobile */
 .panel-toggle { display: none; }
