@@ -282,6 +282,7 @@ export const useEditorStore = defineStore('editor', () => {
       const y = Math.round(normalizedRect.y * canvas.height)
       const w = Math.round(normalizedRect.w * canvas.width)
       const h = Math.round(normalizedRect.h * canvas.height)
+      ctx.filter = 'none'   // reset — browsers apply the active filter to clearRect otherwise
       ctx.clearRect(x, y, w, h)
       canvas.toBlob((blob) => {
         if (!blob) return
