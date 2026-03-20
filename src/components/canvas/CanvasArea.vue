@@ -11,8 +11,14 @@ import CanvasStatusBar from './CanvasStatusBar.vue'
 import CropOverlay      from './CropOverlay.vue'
 import TextOverlay      from './TextOverlay.vue'
 import SelectionOverlay from './SelectionOverlay.vue'
+import BrushOverlay     from './BrushOverlay.vue'
+import EraserOverlay    from './EraserOverlay.vue'
+import FillOverlay      from './FillOverlay.vue'
+import ShapesOverlay    from './ShapesOverlay.vue'
 import type { CropRect, TextLayer } from '@/types/editor'
 import { getAutoTextColor } from '@/utils/colorAnalysis'
+import { buildRenderedCanvas } from '@/utils/canvasRenderer'
+import { floodFill, hexToRgba } from '@/utils/floodFill'
 
 const editor = useEditorStore()
 
@@ -20,6 +26,10 @@ const isCropping   = computed(() => editor.selectedTool === 'crop'   && editor.h
 const isZooming    = computed(() => editor.selectedTool === 'zoom'   && editor.hasImage)
 const isTexting    = computed(() => editor.selectedTool === 'text'   && editor.hasImage)
 const isSelecting  = computed(() => editor.selectedTool === 'select' && editor.hasImage)
+const isBrushing   = computed(() => editor.selectedTool === 'brush'  && editor.hasImage)
+const isErasing    = computed(() => editor.selectedTool === 'eraser' && editor.hasImage)
+const isFilling    = computed(() => editor.selectedTool === 'fill'   && editor.hasImage)
+const isShaping    = computed(() => editor.selectedTool === 'shapes' && editor.hasImage)
 const containerRef = ref<HTMLDivElement>()
 const imgRef       = ref<HTMLImageElement>()
 const displayW     = ref(0)
@@ -50,8 +60,8 @@ function updateDisplaySize(): void {
   }
 }
 
-watch([isCropping, isTexting, isSelecting], ([cropping, texting, selecting]) => {
-  if ((cropping || texting || selecting) && imgRef.value) {
+watch([isCropping, isTexting, isSelecting, isBrushing, isErasing, isFilling, isShaping], ([cropping, texting, selecting, brushing, erasing, filling, shaping]) => {
+  if ((cropping || texting || selecting || brushing || erasing || filling || shaping) && imgRef.value) {
     resizeObs = new ResizeObserver(updateDisplaySize)
     resizeObs.observe(imgRef.value)
     updateDisplaySize()
@@ -77,6 +87,70 @@ function handleSelectionCrop(rect: CropRect): void {
 
 function handleSelectionClear(rect: CropRect): void {
   editor.applyClearSelection(rect)
+}
+
+
+// Shared compositing helper. Draws the overlay canvas synchronously onto the
+// rendered image. Fully synchronous — toDataURL is used instead of toBlob so
+// there is no async callback that can silently fail.
+function compositeOverlay(
+  overlayCanvas: HTMLCanvasElement,
+  mode: GlobalCompositeOperation,
+  save: (src: string, w: number, h: number) => void,
+): void {
+  if (!editor.image || !imgRef.value) return
+  const rendered = buildRenderedCanvas(imgRef.value, {
+    cssFilter: editor.cssFilter,
+    rotation:  editor.rotation,
+    flipH:     editor.flipH,
+    flipV:     editor.flipV,
+    sharpness: editor.adjustments.sharpness,
+  })
+  const output = document.createElement('canvas')
+  output.width  = rendered.width
+  output.height = rendered.height
+  const ctx = output.getContext('2d')!
+  ctx.drawImage(rendered, 0, 0)
+  ctx.globalCompositeOperation = mode
+  ctx.drawImage(overlayCanvas, 0, 0, output.width, output.height)
+  ctx.globalCompositeOperation = 'source-over'
+  // toDataURL is synchronous — no async callback, no silent null-blob failure.
+  const dataUrl = output.toDataURL('image/png')
+  save(dataUrl, output.width, output.height)
+}
+
+function handleBrushApply(canvas: HTMLCanvasElement): void {
+  compositeOverlay(canvas, 'source-over', editor.saveBrushResult)
+}
+
+function handleEraserApply(canvas: HTMLCanvasElement): void {
+  compositeOverlay(canvas, 'destination-out', editor.saveBrushResult)
+}
+
+function handleShapesApply(canvas: HTMLCanvasElement): void {
+  compositeOverlay(canvas, 'source-over', editor.saveShapesResult)
+}
+
+function handleFill(nx: number, ny: number, color: string, tolerance: number): void {
+  if (!editor.image || !imgRef.value) return
+  const rendered = buildRenderedCanvas(imgRef.value, {
+    cssFilter: editor.cssFilter,
+    rotation:  editor.rotation,
+    flipH:     editor.flipH,
+    flipV:     editor.flipV,
+    sharpness: editor.adjustments.sharpness,
+  })
+  const ctx       = rendered.getContext('2d')!
+  const imageData = ctx.getImageData(0, 0, rendered.width, rendered.height)
+  const [cx, cy]  = editor.mapDisplayToCanvas(
+    nx, ny,
+    editor.rotation, editor.flipH, editor.flipV,
+    editor.image.width, editor.image.height,
+  )
+  floodFill(imageData.data, rendered.width, rendered.height, cx, cy, hexToRgba(color), tolerance)
+  ctx.putImageData(imageData, 0, 0)
+  const dataUrl = rendered.toDataURL('image/png')
+  editor.saveFillResult(dataUrl, rendered.width, rendered.height)
 }
 
 // Resolved auto-contrast color; computed before TextOverlay mounts so the
@@ -183,6 +257,34 @@ const sharpenKernel = computed<string>(() => {
             :img-height="displayH"
             @crop="handleSelectionCrop"
             @clear="handleSelectionClear"
+            @cancel="editor.selectTool('select')"
+          />
+          <BrushOverlay
+            v-if="isBrushing && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @apply="handleBrushApply"
+            @cancel="editor.selectTool('select')"
+          />
+          <EraserOverlay
+            v-if="isErasing && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @apply="handleEraserApply"
+            @cancel="editor.selectTool('select')"
+          />
+          <FillOverlay
+            v-if="isFilling && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @fill="handleFill"
+            @cancel="editor.selectTool('select')"
+          />
+          <ShapesOverlay
+            v-if="isShaping && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            @apply="handleShapesApply"
             @cancel="editor.selectTool('select')"
           />
         </div>

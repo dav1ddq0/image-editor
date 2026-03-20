@@ -243,18 +243,16 @@ export const useEditorStore = defineStore('editor', () => {
       output.width  = cropW
       output.height = cropH
       output.getContext('2d')!.drawImage(rendered, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
-      output.toBlob((blob) => {
-        if (!blob) return
-        // Do NOT revoke source.src — it may still be referenced by a history entry.
-        image.value = { src: URL.createObjectURL(blob), width: cropW, height: cropH, name: source.name }
-        // Reset all effects since they are now baked into the new image
-        rotation.value = 0
-        flipH.value    = false
-        flipV.value    = false
-        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
-        selectedFilter.value = 'none'
-        selectedTool.value   = 'select'
-      }, 'image/png')
+      const dataUrl = output.toDataURL('image/png')
+      // Do NOT revoke source.src — it may still be referenced by a history entry.
+      image.value = { src: dataUrl, width: cropW, height: cropH, name: source.name }
+      // Reset all effects since they are now baked into the new image
+      rotation.value = 0
+      flipH.value    = false
+      flipV.value    = false
+      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      selectedFilter.value = 'none'
+      selectedTool.value   = 'select'
     }
     img.src = source.src
   }
@@ -291,16 +289,14 @@ export const useEditorStore = defineStore('editor', () => {
       const w = Math.round(normalizedRect.w * output.width)
       const h = Math.round(normalizedRect.h * output.height)
       ctx.clearRect(x, y, w, h)
-      output.toBlob((blob) => {
-        if (!blob) return
-        image.value = { src: URL.createObjectURL(blob), width: output.width, height: output.height, name: source.name }
-        rotation.value       = 0
-        flipH.value          = false
-        flipV.value          = false
-        selectedFilter.value = 'none'
-        selectedTool.value   = 'select'
-        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
-      }, 'image/png')
+      const dataUrl = output.toDataURL('image/png')
+      image.value = { src: dataUrl, width: output.width, height: output.height, name: source.name }
+      rotation.value       = 0
+      flipH.value          = false
+      flipV.value          = false
+      selectedFilter.value = 'none'
+      selectedTool.value   = 'select'
+      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
     }
     img.src = source.src
   }
@@ -381,18 +377,60 @@ export const useEditorStore = defineStore('editor', () => {
       const lineHeight = canvasFontSize * 1.2
       lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * lineHeight))
 
-      canvas.toBlob((blob) => {
-        if (!blob) return
-        image.value = { src: URL.createObjectURL(blob), width: canvas.width, height: canvas.height, name: source.name }
-        rotation.value       = 0
-        flipH.value          = false
-        flipV.value          = false
-        selectedFilter.value = 'none'
-        selectedTool.value   = 'select'
-        Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
-      }, 'image/png')
+      const dataUrl = canvas.toDataURL('image/png')
+      image.value = { src: dataUrl, width: canvas.width, height: canvas.height, name: source.name }
+      rotation.value       = 0
+      flipH.value          = false
+      flipV.value          = false
+      selectedFilter.value = 'none'
+      selectedTool.value   = 'select'
+      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
     }
     img.src = source.src
+  }
+
+  // Saves a fill result. Does NOT reset selectedTool so the user can keep
+  // filling multiple regions without re-selecting the tool.
+  function saveFillResult(src: string, w: number, h: number): void {
+    if (!image.value) return
+    pushHistory()
+    const name = image.value.name
+    image.value          = { src, width: w, height: h, name }
+    rotation.value       = 0
+    flipH.value          = false
+    flipV.value          = false
+    selectedFilter.value = 'none'
+    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+    // selectedTool intentionally left as 'fill'
+  }
+
+  // Saves the composited shapes result (same contract as saveBrushResult).
+  function saveShapesResult(src: string, w: number, h: number): void {
+    if (!image.value) return
+    pushHistory()
+    const name = image.value.name
+    image.value          = { src, width: w, height: h, name }
+    rotation.value       = 0
+    flipH.value          = false
+    flipV.value          = false
+    selectedFilter.value = 'none'
+    selectedTool.value   = 'select'
+    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+  }
+
+  // Saves the composited brush result. Compositing is done by CanvasArea using
+  // the already-loaded imgRef element, so this action is synchronous.
+  function saveBrushResult(src: string, w: number, h: number): void {
+    if (!image.value) return
+    pushHistory()
+    const name = image.value.name
+    image.value          = { src, width: w, height: h, name }
+    rotation.value       = 0
+    flipH.value          = false
+    flipV.value          = false
+    selectedFilter.value = 'none'
+    selectedTool.value   = 'select'
+    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -433,5 +471,9 @@ export const useEditorStore = defineStore('editor', () => {
     resetImage,
     applyText,
     applyClearSelection,
+    saveBrushResult,
+    saveShapesResult,
+    saveFillResult,
+    mapDisplayToCanvas,
   }
 })

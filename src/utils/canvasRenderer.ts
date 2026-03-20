@@ -53,6 +53,10 @@ export function buildRenderedCanvas(img: HTMLImageElement, opts: RenderOptions):
   ctx.scale(opts.flipH ? -1 : 1, opts.flipV ? -1 : 1)
   ctx.drawImage(img, -w / 2, -h / 2)
   ctx.setTransform(1, 0, 0, 1, 0, 0)
+  // Reset filter before pixel-level operations so getImageData/putImageData
+  // never run under an active CSS filter (some browsers taint the canvas or
+  // throw a SecurityError when a url() filter is active during those calls).
+  ctx.filter = 'none'
   applySharpen(ctx, opts.sharpness)
   return canvas
 }
