@@ -219,7 +219,9 @@ const sharpenKernel = computed<string>(() => {
       @wheel.prevent="onWheel"
       @click="onContainerClick"
     >
-      <CanvasDropZone v-if="!editor.hasImage" />
+      <div v-if="!editor.hasImage" class="image-center">
+        <CanvasDropZone />
+      </div>
 
       <!--
         .image-center stretches to fill the scrollable container and centers the
