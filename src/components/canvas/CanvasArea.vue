@@ -36,10 +36,13 @@ const displayW     = ref(0)
 const displayH     = ref(0)
 let resizeObs: ResizeObserver | null = null
 
-// When a new image is loaded, auto-calculate a zoom level that fits it in the
-// container (never upscaling beyond 100%).
-watch(() => editor.image, async (img) => {
+// Auto-calculate zoom-to-fit only on initial image load or when image dimensions
+// change (e.g. after crop). Skips the reset for brush/eraser/shapes/text/fill
+// operations where dimensions stay the same, so the user's current zoom is preserved.
+watch(() => editor.image, async (img, prevImg) => {
   if (!img) return
+  // If dimensions are unchanged this is a paint/filter operation — keep current zoom.
+  if (prevImg && img.width === prevImg.width && img.height === prevImg.height) return
   await nextTick()
   if (!containerRef.value) return
   const { clientWidth: cw, clientHeight: ch } = containerRef.value
