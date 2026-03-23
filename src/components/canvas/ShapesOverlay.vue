@@ -132,6 +132,7 @@ function clearShapes(): void {
     />
 
     <!-- Floating toolbar -->
+    <Teleport to="#canvas-area-host">
     <div class="shapes-toolbar" @pointerdown.stop @click.stop>
 
       <!-- Shape type buttons -->
@@ -187,6 +188,7 @@ function clearShapes(): void {
       <button class="tool-btn tool-btn--primary" :disabled="!hasShapes" @click="canvasRef && emit('apply', canvasRef)">Apply</button>
 
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -209,7 +211,7 @@ function clearShapes(): void {
 /* ── Floating toolbar ── */
 .shapes-toolbar {
   position: absolute;
-  top: -52px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -221,7 +223,7 @@ function clearShapes(): void {
   padding: 6px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-  z-index: 10;
+  z-index: 200;
 }
 
 /* Shape type selector */
@@ -326,13 +328,8 @@ function clearShapes(): void {
 
 @media (max-width: 639px) {
   .shapes-toolbar {
-    top: auto;
-    bottom: -52px;
-    left: 0;
-    transform: none;
-    max-width: 100%;
+    max-width: calc(100vw - 24px);
     overflow-x: auto;
-    border-radius: var(--radius-sm);
   }
 }
 </style>

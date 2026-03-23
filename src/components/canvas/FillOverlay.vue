@@ -31,6 +31,7 @@ function onClick(e: MouseEvent): void {
     @click="onClick"
   >
     <!-- Floating toolbar -->
+    <Teleport to="#canvas-area-host">
     <div class="fill-toolbar" @pointerdown.stop @click.stop>
 
       <!-- Bucket icon -->
@@ -60,6 +61,7 @@ function onClick(e: MouseEvent): void {
       <button class="tool-btn" @click="emit('cancel')">✕ Done</button>
 
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -76,7 +78,7 @@ function onClick(e: MouseEvent): void {
 /* ── Floating toolbar ── */
 .fill-toolbar {
   position: absolute;
-  top: -52px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -88,7 +90,7 @@ function onClick(e: MouseEvent): void {
   padding: 6px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-  z-index: 10;
+  z-index: 200;
 }
 
 .fill-icon {
@@ -151,13 +153,8 @@ function onClick(e: MouseEvent): void {
 
 @media (max-width: 639px) {
   .fill-toolbar {
-    top: auto;
-    bottom: -52px;
-    left: 0;
-    transform: none;
-    max-width: 100%;
+    max-width: calc(100vw - 24px);
     overflow-x: auto;
-    border-radius: var(--radius-sm);
   }
 }
 </style>

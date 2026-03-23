@@ -101,6 +101,7 @@ function applyStrokes(): void {
     />
 
     <!-- Floating toolbar -->
+    <Teleport to="#canvas-area-host">
     <div class="eraser-toolbar" @pointerdown.stop @click.stop>
 
       <!-- Eraser icon indicator -->
@@ -127,6 +128,7 @@ function applyStrokes(): void {
       <button class="tool-btn tool-btn--primary" :disabled="!hasStrokes" @click="applyStrokes">Apply</button>
 
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -149,7 +151,7 @@ function applyStrokes(): void {
 /* ── Floating toolbar ── */
 .eraser-toolbar {
   position: absolute;
-  top: -52px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -161,7 +163,7 @@ function applyStrokes(): void {
   padding: 6px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-  z-index: 10;
+  z-index: 200;
 }
 
 .eraser-icon {
@@ -222,13 +224,8 @@ function applyStrokes(): void {
 
 @media (max-width: 639px) {
   .eraser-toolbar {
-    top: auto;
-    bottom: -52px;
-    left: 0;
-    transform: none;
-    max-width: 100%;
+    max-width: calc(100vw - 24px);
     overflow-x: auto;
-    border-radius: var(--radius-sm);
   }
 }
 </style>

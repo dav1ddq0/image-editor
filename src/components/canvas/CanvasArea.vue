@@ -195,7 +195,7 @@ const sharpenKernel = computed<string>(() => {
 </script>
 
 <template>
-  <main class="canvas-area">
+  <main class="canvas-area" id="canvas-area-host">
 
     <!--
       Hidden SVG that declares the reactive sharpen filter.
@@ -316,6 +316,7 @@ const sharpenKernel = computed<string>(() => {
   flex-direction: column;
   background: var(--color-bg);
   overflow: hidden;
+  position: relative;
 }
 
 .canvas-container {

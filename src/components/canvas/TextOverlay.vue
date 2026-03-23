@@ -116,7 +116,8 @@ function confirm(): void {
     @click="onOverlayClick"
   >
     <!-- Floating toolbar -->
-    <div class="text-toolbar" @click.stop>
+    <Teleport to="#canvas-area-host">
+    <div class="text-toolbar" @pointerdown.stop @click.stop>
 
       <select v-model="fontFamily" class="font-select">
         <option v-for="f in FONT_FAMILIES" :key="f" :value="f">{{ f }}</option>
@@ -139,6 +140,7 @@ function confirm(): void {
       <button class="action-btn confirm" :disabled="!text.trim()" @click="confirm">✓</button>
 
     </div>
+    </Teleport>
 
     <!-- Hint before placement -->
     <div v-if="!placed" class="placement-hint">
@@ -200,7 +202,7 @@ function confirm(): void {
 /* ── Toolbar ─────────────────────────────────────── */
 .text-toolbar {
   position: absolute;
-  top: -48px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -212,7 +214,7 @@ function confirm(): void {
   padding: 6px 10px;
   box-shadow: 0 4px 16px rgba(0,0,0,.5);
   white-space: nowrap;
-  z-index: 10;
+  z-index: 200;
 }
 
 .font-select {
@@ -392,13 +394,8 @@ function confirm(): void {
 
 @media (max-width: 639px) {
   .text-toolbar {
-    top: auto;
-    bottom: -52px;
-    left: 0;
-    transform: none;
-    max-width: 100%;
+    max-width: calc(100vw - 24px);
     overflow-x: auto;
-    border-radius: var(--radius-sm);
   }
 }
 </style>

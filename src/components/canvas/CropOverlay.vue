@@ -203,6 +203,7 @@ function applyHandler() {
     </div>
 
     <!-- Controls bar -->
+    <Teleport to="#canvas-area-host">
     <div class="crop-controls">
       <!-- Aspect ratio presets -->
       <div class="preset-group">
@@ -231,6 +232,7 @@ function applyHandler() {
       <button class="btn btn-secondary btn-small" @click="emit('cancel')">Cancel</button>
       <button class="btn btn-primary  btn-small" @click="applyHandler">Apply</button>
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -285,21 +287,24 @@ function applyHandler() {
   z-index: 2;
 }
 
-/* Controls bar — pinned below the crop overlay area */
+/* Controls bar — pinned at top of canvas-area via Teleport */
 .crop-controls {
   position: absolute;
-  bottom: -44px;
-  left: 0;
-  right: 0;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   height: 40px;
   background: rgba(22, 33, 62, 0.92);
   border: 1px solid var(--color-border);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   padding: 0 10px;
   gap: 6px;
   backdrop-filter: blur(4px);
+  white-space: nowrap;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 .preset-group {
@@ -337,7 +342,9 @@ function applyHandler() {
 
 @media (max-width: 639px) {
   .crop-controls {
-    bottom: -64px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    height: auto;
     flex-wrap: wrap;
     gap: 4px;
     padding: 6px 8px;
