@@ -2,7 +2,7 @@
 
 A fully-featured, browser-based image editor built with Vue 3, TypeScript, and the Canvas 2D API. All effects are non-destructive until committed, with full undo/redo support.
 
-![App preview](https://github.com/user-attachments/assets/4c1894d5-906d-48fc-bcbe-b720f9a11966)
+![App preview](https://github.com/user-attachments/assets/1095c313-dc60-49d2-94f1-66100fc4fbe9)
 
 ---
 
