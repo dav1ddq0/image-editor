@@ -28,3 +28,6 @@ vite.config.js
 *.njsproj
 *.sln
 *.sw?
+# GIF assets (hosted on GitHub CDN)
+demo.gif
+demo-compressed.gif
