@@ -8,8 +8,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { useEditorStore } from '@/stores/editorStore'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
-import { scanQrCode }   from '@/utils/qrScanner'
-import { scanBarcode }  from '@/utils/barcodeScanner'
+import { scanQrCode }          from '@/utils/qrScanner'
+import { scanBarcode }         from '@/utils/barcodeScanner'
+import { convertImageToAscii, type ColorChar } from '@/utils/asciiConverter'
 import AppNavbar         from './navbar/AppNavbar.vue'
 import AppToolbar        from './toolbar/AppToolbar.vue'
 import CanvasArea        from './canvas/CanvasArea.vue'
@@ -17,6 +18,7 @@ import RightPanel        from './panels/RightPanel.vue'
 import ExportDialog      from './export/ExportDialog.vue'
 import QrScanDialog      from './qr/QrScanDialog.vue'
 import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
+import AsciiArtDialog   from './ascii/AsciiArtDialog.vue'
 import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
@@ -45,6 +47,34 @@ async function scanQr(): Promise<void> {
   } else {
     qrState.value = 'not-found'
   }
+}
+
+// ── ASCII Art ────────────────────────────────────────────────────────────────
+const showAsciiDialog  = ref(false)
+const asciiState       = ref<'generating' | 'done'>('generating')
+const asciiText        = ref('')
+const asciiColorLines  = ref<ColorChar[][]>([])
+const asciiCols        = ref(120)
+const asciiMoreLevels  = ref(true)
+const asciiBlockChars  = ref(false)
+
+async function generateAsciiArt(cols: number, moreLevels: boolean, blockChars: boolean): Promise<void> {
+  if (!editor.image) return
+  asciiCols.value       = cols
+  asciiMoreLevels.value = moreLevels
+  asciiBlockChars.value = blockChars
+  asciiState.value      = 'generating'
+  showAsciiDialog.value = true
+
+  const img = new Image()
+  img.onload = () => {
+    const canvas          = buildCanvas(img)
+    const result          = convertImageToAscii(canvas, { cols, scale: 0.55, moreLevels, blockChars })
+    asciiText.value       = result.text
+    asciiColorLines.value = result.colorLines
+    asciiState.value      = 'done'
+  }
+  img.src = editor.image.src
 }
 
 // ── Barcode Scanner ─────────────────────────────────────────────────────────
@@ -177,6 +207,7 @@ function exportImage(options: ExportOptions): void {
       @export="showExportDialog = true"
       @scan-qr="scanQr"
       @scan-barcode="scanBarcodeImage"
+      @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"
       @toggle-panel="panelOpen = !panelOpen"
     />
 
@@ -205,6 +236,16 @@ function exportImage(options: ExportOptions): void {
       v-model:visible="showBarcodeDialog"
       :state="barcodeState"
       :text="barcodeText"
+    />
+
+    <AsciiArtDialog
+      v-model:visible="showAsciiDialog"
+      :state="asciiState"
+      :text="asciiText"
+      :color-lines="asciiColorLines"
+      :cols="asciiCols"
+      :more-levels="asciiMoreLevels"
+      @regenerate="(cols, moreLevels, blockChars) => generateAsciiArt(cols, moreLevels, blockChars)"
     />
   </div>
 </template>

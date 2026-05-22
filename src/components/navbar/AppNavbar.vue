@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 defineProps<{ hasImage?: boolean }>()
-const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'toggle-panel': [] }>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'toggle-panel': [] }>()
 </script>
 
 <template>
@@ -67,6 +67,21 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
           <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
         </svg>
         <span class="bc-label">Scan Barcode</span>
+      </button>
+      <button
+        class="btn btn-secondary ascii-btn"
+        :disabled="!hasImage"
+        title="Generate ASCII art"
+        @click="emit('ascii-art')"
+      >
+        <svg class="ascii-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <line x1="7"  y1="8"  x2="11" y2="8"  />
+          <line x1="7"  y1="12" x2="17" y2="12" />
+          <line x1="7"  y1="16" x2="14" y2="16" />
+        </svg>
+        <span class="ascii-label">ASCII Art</span>
       </button>
       <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
     </nav>
@@ -131,6 +146,15 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
 }
 .bc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .bc-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ASCII art button */
+.ascii-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ascii-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ascii-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* Only show on mobile */
 .panel-toggle { display: none; }
