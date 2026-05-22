@@ -31,3 +31,8 @@ vite.config.js
 # GIF assets (hosted on GitHub CDN)
 demo.gif
 demo-compressed.gif
+
+# Local AI agent configurations
+.claude/
+.github/
+.opencode/
