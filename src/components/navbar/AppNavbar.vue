@@ -74,13 +74,7 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
         title="Generate ASCII art"
         @click="emit('ascii-art')"
       >
-        <svg class="ascii-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <line x1="7"  y1="8"  x2="11" y2="8"  />
-          <line x1="7"  y1="12" x2="17" y2="12" />
-          <line x1="7"  y1="16" x2="14" y2="16" />
-        </svg>
+        <img src="/fish-ascii.svg" class="ascii-icon" alt="" aria-hidden="true" />
         <span class="ascii-label">ASCII Art</span>
       </button>
       <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
@@ -154,7 +148,7 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
   gap: 6px;
 }
 .ascii-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ascii-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.ascii-icon { width: 24px; height: 18px; flex-shrink: 0; }
 
 /* Only show on mobile */
 .panel-toggle { display: none; }
