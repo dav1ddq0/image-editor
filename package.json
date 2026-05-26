@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@zxing/library": "^0.21.3",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",

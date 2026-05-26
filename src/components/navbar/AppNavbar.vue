@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 defineProps<{ hasImage?: boolean }>()
-const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'toggle-panel': [] }>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'toggle-panel': [] }>()
 </script>
 
 <template>
@@ -76,6 +76,25 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
       >
         <img src="/fish-ascii.svg" class="ascii-icon" alt="" aria-hidden="true" />
         <span class="ascii-label">ASCII Art</span>
+      </button>
+      <button
+        class="btn btn-secondary ocr-btn"
+        :disabled="!hasImage"
+        title="Extract text from image"
+        @click="emit('extract-text')"
+      >
+        <svg class="ocr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <!-- Document outline -->
+          <rect x="4" y="2" width="13" height="18" rx="2" />
+          <!-- Folded corner -->
+          <path d="M14 2v5h5" stroke-width="1.4" />
+          <!-- Text lines -->
+          <line x1="7" y1="11" x2="15" y2="11" />
+          <line x1="7" y1="14" x2="15" y2="14" />
+          <line x1="7" y1="17" x2="11" y2="17" />
+        </svg>
+        <span class="ocr-label">Extract Text</span>
       </button>
       <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
     </nav>
@@ -149,6 +168,15 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
 }
 .ascii-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .ascii-icon { width: 24px; height: 18px; flex-shrink: 0; }
+
+/* Extract Text button */
+.ocr-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ocr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ocr-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* Only show on mobile */
 .panel-toggle { display: none; }

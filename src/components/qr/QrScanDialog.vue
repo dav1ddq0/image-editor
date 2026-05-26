@@ -23,16 +23,9 @@ async function copyToClipboard(): Promise<void> {
     await navigator.clipboard.writeText(props.text)
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
-  } catch {
-    // Fallback for environments without Clipboard API
-    const ta = document.createElement('textarea')
-    ta.value = props.text
-    document.body.appendChild(ta)
-    ta.select()
-    document.execCommand('copy')
-    document.body.removeChild(ta)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error)
+    copied.value = false
   }
 }
 

@@ -21,7 +21,6 @@ const emit = defineEmits<{
   'regenerate':     [cols: number, moreLevels: boolean, blockChars: boolean]
 }>()
 
-const copied          = ref(false)
 const localCols       = ref(props.cols)
 const localMoreLevels = ref(props.moreLevels)
 const localFontSize   = ref(5)
@@ -62,17 +61,34 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-async function copyToClipboard(): Promise<void> {
+const copied = ref(false)
+
+async function copyRich(): Promise<boolean> {
   try {
-    const htmlBlob  = new Blob([buildHtmlPayload()], { type: 'text/html' })
-    const textBlob  = new Blob([props.text],         { type: 'text/plain' })
+    const htmlBlob = new Blob([buildHtmlPayload()], { type: 'text/html' })
+    const textBlob = new Blob([props.text],         { type: 'text/plain' })
     await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })])
-  } catch {
-    // Fallback: plain text only
-    try { await navigator.clipboard.writeText(props.text) } catch { /* ignore */ }
+    return true
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error)
+    return false
   }
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+}
+
+async function copyPlain(): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(props.text)
+    return true
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error)
+    return false
+  }
+}
+
+async function copyToClipboard(): Promise<void> {
+  const success = await copyRich() || await copyPlain()
+  copied.value = success
+  if (success) setTimeout(() => { copied.value = false }, 2000)
 }
 
 function regenerate(): void {

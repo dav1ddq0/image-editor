@@ -11,6 +11,7 @@ import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 import { scanQrCode }          from '@/utils/qrScanner'
 import { scanBarcode }         from '@/utils/barcodeScanner'
 import { convertImageToAscii, type ColorChar } from '@/utils/asciiConverter'
+import { isModelLoaded, loadModel, runOcr, type TextRegion  } from '@/utils/textExtractor'
 import AppNavbar         from './navbar/AppNavbar.vue'
 import AppToolbar        from './toolbar/AppToolbar.vue'
 import CanvasArea        from './canvas/CanvasArea.vue'
@@ -18,7 +19,8 @@ import RightPanel        from './panels/RightPanel.vue'
 import ExportDialog      from './export/ExportDialog.vue'
 import QrScanDialog      from './qr/QrScanDialog.vue'
 import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
-import AsciiArtDialog   from './ascii/AsciiArtDialog.vue'
+import AsciiArtDialog    from './ascii/AsciiArtDialog.vue'
+import ExtractTextDialog from './ocr/ExtractTextDialog.vue'
 import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
@@ -73,6 +75,45 @@ async function generateAsciiArt(cols: number, moreLevels: boolean, blockChars: b
     asciiText.value       = result.text
     asciiColorLines.value = result.colorLines
     asciiState.value      = 'done'
+  }
+  img.src = editor.image.src
+}
+
+// ── Text Extractor ───────────────────────────────────────────────────────────
+const showOcrDialog = ref(false)
+const ocrState      = ref<'loading-model' | 'extracting' | 'found' | 'not-found'>('extracting')
+const ocrText       = ref('')
+const ocrRegions    = ref<TextRegion[]>([])
+const ocrImageSrc   = ref('')
+const ocrProgress   = ref(0)
+
+async function extractText(): Promise<void> {
+  if (!editor.image) return
+  ocrState.value      = isModelLoaded() ? 'extracting' : 'loading-model'
+  ocrProgress.value   = 0
+  showOcrDialog.value = true
+
+  const img = new Image()
+  img.onload = async () => {
+    const canvas      = buildCanvas(img)
+    ocrImageSrc.value = canvas.toDataURL('image/jpeg', 0.92)
+
+    if (!isModelLoaded()) {
+      await loadModel(pct => {
+        ocrProgress.value = pct
+        ocrState.value    = 'loading-model'
+      })
+    }
+
+    ocrState.value = 'extracting'
+    const result   = await runOcr(canvas)
+    if (result) {
+      ocrText.value    = result.text
+      ocrRegions.value = result.regions
+      ocrState.value   = 'found'
+    } else {
+      ocrState.value = 'not-found'
+    }
   }
   img.src = editor.image.src
 }
@@ -208,6 +249,7 @@ function exportImage(options: ExportOptions): void {
       @scan-qr="scanQr"
       @scan-barcode="scanBarcodeImage"
       @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"
+      @extract-text="extractText"
       @toggle-panel="panelOpen = !panelOpen"
     />
 
@@ -236,6 +278,15 @@ function exportImage(options: ExportOptions): void {
       v-model:visible="showBarcodeDialog"
       :state="barcodeState"
       :text="barcodeText"
+    />
+
+    <ExtractTextDialog
+      v-model:visible="showOcrDialog"
+      :state="ocrState"
+      :text="ocrText"
+      :regions="ocrRegions"
+      :image-src="ocrImageSrc"
+      :progress="ocrProgress"
     />
 
     <AsciiArtDialog
