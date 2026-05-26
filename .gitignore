@@ -34,5 +34,6 @@ demo-compressed.gif
 
 # Local AI agent configurations
 .claude/
-.github/
+.github/AGENTS.md
+.github/skills/
 .opencode/
