@@ -43,7 +43,7 @@ const emit = defineEmits<{
       :value="modelValue"
       :disabled="disabled"
       @pointerdown="emit('dragstart')"
-      @input="emit('update:modelValue', Number($event.target.value))"
+      @input="emit('update:modelValue', Number(($event.target as HTMLInputElement).value))"
     />
 
     <span class="value-label">{{ modelValue }}</span>

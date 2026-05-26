@@ -231,8 +231,8 @@ const sharpenKernel = computed<string>(() => {
         <div class="image-wrapper">
           <img
             ref="imgRef"
-            :src="editor.image.src"
-            :alt="editor.image.name"
+            :src="editor.image?.src"
+            :alt="editor.image?.name"
             :style="{
               width:     imgPixelWidth + 'px',
               filter:    editor.cssFilter,

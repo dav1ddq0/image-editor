@@ -5,7 +5,7 @@
   punch transparent holes in the rendered image.
 -->
 <script setup lang="ts">
-import { ref, defineExpose } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit  = defineEmits<{

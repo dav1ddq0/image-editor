@@ -4,7 +4,7 @@
   8 draggable handles, aspect ratio presets, lock toggle, and apply/cancel.
 -->
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import type { AspectPreset, CropRect } from '@/types/editor'
 import { useEditorStore } from '@/stores/editorStore'
 

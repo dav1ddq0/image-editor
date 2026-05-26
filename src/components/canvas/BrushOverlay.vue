@@ -4,7 +4,7 @@
   pointer events draw strokes in real time. Apply bakes the strokes into the image.
 -->
 <script setup lang="ts">
-import { ref, defineExpose } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit  = defineEmits<{
