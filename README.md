@@ -2,6 +2,10 @@
 
 A fully-featured, browser-based image editor built with Vue 3, TypeScript, and the Canvas 2D API. All effects are non-destructive until committed, with full undo/redo support.
 
+[![Deploy to GitHub Pages](https://github.com/dav1ddq0/image-editor/actions/workflows/deploy.yml/badge.svg)](https://github.com/dav1ddq0/image-editor/actions/workflows/deploy.yml)
+
+🌐 **[Live Demo](https://dav1ddq0.github.io/image-editor/)**
+
 ![App preview](https://github.com/user-attachments/assets/1095c313-dc60-49d2-94f1-66100fc4fbe9)
 
 ---
@@ -31,9 +35,11 @@ A fully-featured, browser-based image editor built with Vue 3, TypeScript, and t
 ### Transform
 Rotate Left / Right · Flip Horizontal / Vertical
 
-### Scanning
+### Scanning & AI
 - **Scan QR** — detects and decodes QR codes embedded in the current image
 - **Scan Barcode** — detects 1D barcodes (Code128, EAN, UPC, Code39, ITF)
+- **Extract Text** — AI-powered OCR using Florence-2; overlays transparent selectable text regions directly on the image, similar to Windows Snipping Tool Text Actions. Model downloads once and is cached for future use.
+- **ASCII Art** — converts the image to ASCII art with B&W, color, and block character (█▓▒░) modes; adjustable columns, font size, and 70-level ramp option; copies as rich HTML to preserve colors
 
 ### Export
 Export as **PNG**, **JPEG**, **WebP**, or **PDF** with adjustable quality and filename.
@@ -54,6 +60,7 @@ Export as **PNG**, **JPEG**, **WebP**, or **PDF** with adjustable quality and fi
 | State | Pinia |
 | QR scanning | jsqr |
 | Barcode scanning | @zxing/library |
+| OCR / AI | @huggingface/transformers (Florence-2) |
 | PDF export | jsPDF |
 
 ---
@@ -87,6 +94,8 @@ image-editor/
 │   │   ├── export/               # Export dialog
 │   │   ├── qr/                   # QR scanner dialog
 │   │   ├── barcode/              # Barcode scanner dialog
+│   │   ├── ocr/                  # Extract Text dialog
+│   │   ├── ascii/                # ASCII Art dialog
 │   │   └── ImageEditor.vue       # Root layout
 │   ├── stores/
 │   │   └── editorStore.ts        # Pinia store — all editor state & actions
@@ -97,7 +106,9 @@ image-editor/
 │   │   ├── colorAnalysis.ts      # WCAG contrast analysis for auto text color
 │   │   ├── floodFill.ts          # BFS flood-fill on ImageData
 │   │   ├── qrScanner.ts          # QR decode via jsqr
-│   │   └── barcodeScanner.ts     # Barcode decode via @zxing
+│   │   ├── barcodeScanner.ts     # Barcode decode via @zxing
+│   │   ├── textExtractor.ts      # Florence-2 OCR inference
+│   │   └── asciiConverter.ts     # Image-to-ASCII conversion logic
 │   ├── App.vue
 │   └── main.ts
 ├── index.html
