@@ -63,11 +63,25 @@ function close(): void {
 
         <!-- Loading model (first run) -->
         <div v-if="state === 'loading-model'" class="ocr-body ocr-center">
-          <div class="ocr-progress-wrap" role="progressbar" :aria-valuenow="progress">
-            <div class="ocr-progress-bar" :style="{ width: progress + '%' }" />
-          </div>
-          <p class="ocr-status-text">Downloading AI model… {{ progress }}%</p>
-          <p class="ocr-hint">This happens once — the model is cached for future use.</p>
+          <!-- Before any bytes arrive (resolving file metadata, or reading from
+                cache) show an indeterminate sliding bar -->
+          <template v-if="progress <= 0">
+            <div class="ocr-spinner" aria-label="Loading AI model…" />
+            <p class="ocr-status-text">Loading AI model…</p>
+          </template>
+          <template v-else-if="progress < 100">
+            <div class="ocr-progress-wrap" role="progressbar" :aria-valuenow="progress">
+              <div class="ocr-progress-bar" :style="{ width: progress + '%' }" />
+            </div>
+            <p class="ocr-status-text">Downloading AI model… {{ progress }}%</p>
+          </template>
+          <!-- Once downloaded, ONNX compiles the model into a runnable session.
+               That step emits no progress events, so show a spinner instead of a
+               bar frozen at 100% -->
+          <template v-else>
+            <div class="ocr-spinner" aria-label="Preparing model…" />
+            <p class="ocr-status-text">Preparing model…</p>
+          </template>
         </div>
 
         <!-- Extracting -->
@@ -265,6 +279,19 @@ function close(): void {
   background: var(--color-accent);
   border-radius: 3px;
   transition: width 0.3s ease;
+}
+
+/* Indeterminate variant: a short segment slides left→right on a loop, used
+   while we don't yet have a real percentage (metadata / cache read). */
+.ocr-progress-bar--indeterminate {
+  width: 40%;
+  transition: none;
+  animation: ocr-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes ocr-indeterminate {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(260%); }
 }
 
 .ocr-hint {

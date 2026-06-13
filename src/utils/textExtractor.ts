@@ -45,7 +45,7 @@ export async function loadModel(onProgress?: (pct: number) => void): Promise<voi
   if (_model) return
 
   const progressCb = (info: any) => {
-    if (info.status === 'progress' && typeof info.progress === 'number') {
+    if (info.status === 'progress_total' && typeof info.progress === 'number') {
       onProgress?.(Math.round(info.progress))
     }
   }
