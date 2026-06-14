@@ -4,7 +4,7 @@
   itself once one is available, and CanvasStatusBar at the bottom.
 -->
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
@@ -74,7 +74,73 @@ watch([isCropping, isTexting, isSelecting, isBrushing, isErasing, isFilling, isS
   }
 })
 
-onUnmounted(() => resizeObs?.disconnect())
+// --Touch gestures: pinch-to-zoom + two-finger pan -----------------------
+// Native touch events are used (not pointer events) because the drawing overlays
+// pointer-capture a single touch; touch events still report every active finger,
+// so a 2-finger gesture is detectable regardless of which tool is active.
+const isGesturing = ref(false)
+let pinchStartDist = 0
+let pinchStartZoom = 100
+let lastCx = 0
+let lastCy = 0
+
+function twoTouchMetrics(t: TouchList): { dist: number; cx: number; cy: number } {
+  const dx = t[0].clientX - t[1].clientX
+  const dy = t[0].clientY - t[1].clientY
+  return {
+    dist: Math.hypot(dx, dy),
+    cx: (t[0].clientX + t[1].clientX) / 2,
+    cy: (t[0].clientY + t[1].clientY) / 2,
+  }
+}
+
+function onTouchStart(e: TouchEvent): void {
+  if (!editor.hasImage || e.touches.length !== 2) return
+  const m = twoTouchMetrics(e.touches)
+  isGesturing.value = true   // disables overlay pointer-events so no stray drawing
+  pinchStartDist = m.dist
+  pinchStartZoom = editor.zoom
+  lastCx = m.cx
+  lastCy = m.cy
+}
+
+function onTouchMove(e: TouchEvent): void {
+  if (!isGesturing.value || e.touches.length !== 2) return
+  e.preventDefault()   // take over from native page zoom/scroll
+  const m = twoTouchMetrics(e.touches)
+  if (pinchStartDist > 0) editor.setZoom(pinchStartZoom * (m.dist / pinchStartDist))
+  const el = containerRef.value
+  if (el) {
+    el.scrollLeft -= m.cx - lastCx   // two-finger pan
+    el.scrollTop  -= m.cy - lastCy
+  }
+  lastCx = m.cx
+  lastCy = m.cy
+}
+
+function onTouchEnd(e: TouchEvent): void {
+  if (e.touches.length < 2) isGesturing.value = false
+}
+
+onMounted(() => {
+  const el = containerRef.value
+  if (!el) return
+  // passive:false so preventDefault works during a 2-finger gesture
+  el.addEventListener('touchstart',  onTouchStart, { passive: false })
+  el.addEventListener('touchmove',   onTouchMove,  { passive: false })
+  el.addEventListener('touchend',    onTouchEnd)
+  el.addEventListener('touchcancel', onTouchEnd)
+})
+
+onUnmounted(() => {
+  resizeObs?.disconnect()
+  const el = containerRef.value
+  if (!el) return
+  el.removeEventListener('touchstart',  onTouchStart)
+  el.removeEventListener('touchmove',   onTouchMove)
+  el.removeEventListener('touchend',    onTouchEnd)
+  el.removeEventListener('touchcancel', onTouchEnd)
+})
 
 function handleCropApply(rect: CropRect): void {
   editor.applyCrop(rect)
@@ -215,7 +281,7 @@ const sharpenKernel = computed<string>(() => {
     <div
       ref="containerRef"
       class="canvas-container"
-      :class="{ 'cursor-zoom-in': isZooming }"
+      :class="{ 'cursor-zoom-in': isZooming, 'is-gesturing': isGesturing }"
       @wheel.prevent="onWheel"
       @click="onContainerClick"
     >
@@ -326,6 +392,11 @@ const sharpenKernel = computed<string>(() => {
 }
 
 .cursor-zoom-in { cursor: zoom-in; }
+
+/* While a 2-finger gesture runs, the browser must not also pan/zoom the page,
+   and overlays must not receive pointer input (avoids stray selections/strokes). */
+.canvas-container.is-gesturing { touch-action: none; }
+.is-gesturing .image-wrapper > :not(.canvas-image) { pointer-events: none; }
 
 /* Fills the scrollable area and centers the image when smaller than the viewport */
 .image-center {

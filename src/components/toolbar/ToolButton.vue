@@ -44,10 +44,12 @@ const emit = defineEmits<{ click: [] }>()
   transition: all var(--transition);
 }
 
-.tool-btn:hover {
-  background: var(--color-border);
-  color: #fff;
-  border-color: var(--color-accent);
+@media (hover: hover) and (pointer: fine) {
+  .tool-btn:hover {
+    background: var(--color-border);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
 }
 
 .tool-btn.active {
@@ -59,5 +61,14 @@ const emit = defineEmits<{ click: [] }>()
 .tool-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* Touch devices: 48px tap target (satisfies Android Material + Apple HIG) */
+@media (hover: none), (pointer: coarse) {
+  .tool-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
 }
 </style>

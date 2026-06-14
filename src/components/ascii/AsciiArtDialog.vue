@@ -207,12 +207,14 @@ function close(): void {
   align-items: center;
   justify-content: center;
   z-index: 200;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 .ascii-dialog {
   width: 620px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 32px);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -248,7 +250,9 @@ function close(): void {
   border-radius: var(--radius-sm);
   transition: color var(--transition);
 }
-.ascii-close:hover { color: var(--color-text); }
+@media (hover: hover) and (pointer: fine) {
+  .ascii-close:hover { color: var(--color-text); }
+}
 
 /* ── Body ── */
 .ascii-body {
@@ -368,8 +372,9 @@ function close(): void {
     right: 0;
     width: 100%;
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 90dvh;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .ascii-output { max-height: 240px; }

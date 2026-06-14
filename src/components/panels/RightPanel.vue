@@ -54,21 +54,25 @@ const editor = useEditorStore()
   width: 100%;
 }
 
-/* Mobile header shown only on small screens */
+/* Mobile header shown only when the panel is a sheet */
 .panel-mobile-header { display: none; }
 
-@media (max-width: 639px) {
+/* Slide-in sheet on phones AND tablet-portrait (≤1024px); docked on desktop */
+@media (max-width: 1024px) {
   .right-panel {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
-    width: min(280px, 85vw);
+    width: min(320px, 85vw);
     z-index: 100;
     transform: translateX(100%);
     transition: transform 0.25s ease;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.6);
     border-left: 1px solid var(--color-border);
+    /* Keep content clear of the home indicator / side notch in landscape */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-right: env(safe-area-inset-right);
   }
 
   .right-panel.is-open {
@@ -80,6 +84,7 @@ const editor = useEditorStore()
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
     border-bottom: 1px solid var(--color-border);
     position: sticky;
     top: 0;
@@ -96,19 +101,33 @@ const editor = useEditorStore()
   }
 
   .panel-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     background: none;
     border: none;
+    border-radius: 50%;
     color: var(--color-muted);
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     cursor: pointer;
-    padding: 4px 6px;
-    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
   }
-
-  .panel-close-btn:hover { color: var(--color-accent); }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .right-panel { width: 210px; }
+/* Hover (desktop): fill into a red circle */
+@media (hover: hover) and (pointer: fine) {
+  .panel-close-btn:hover {
+    background: var(--color-accent);
+    color: #fff;
+  }
+}
+
+/* Press feedback on touch (no hover available) */
+.panel-close-btn:active {
+  background: var(--color-accent);
+  color: #fff;
 }
 </style>

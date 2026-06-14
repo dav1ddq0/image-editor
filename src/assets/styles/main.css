@@ -19,6 +19,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Remove the grey flash shown when tapping on iOS Safari & Android Chrome */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -26,11 +28,13 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
 #app {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -75,8 +79,20 @@ body {
   transition: opacity var(--transition);
 }
 
-.btn:hover  { opacity: 0.85; }
+/* Only apply hover feedback on devices with a real pointer, so the style does
+   not "stick" after a tap on touchscreens. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { opacity: 0.85; }
+}
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Touch devices (incl. large iPad Pro): guarantee a comfortable tap target.
+   48px satisfies both Android (Material) and Apple (HIG) guidelines. */
+@media (hover: none), (pointer: coarse) {
+  .btn { min-height: 48px; }
+  /* Inputs must be ≥16px or iOS Safari auto-zooms when they gain focus */
+  input, select, textarea { font-size: 16px; }
+}
 
 .btn-primary   { background: var(--color-accent);  color: #fff; }
 .btn-secondary { background: var(--color-border);  color: var(--color-text); }

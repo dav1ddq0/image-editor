@@ -77,13 +77,15 @@ const drawingTools: ToolDefinition[] = [
 @media (max-width: 639px) {
   .toolbar {
     width: 100%;
-    height: 52px;
+    min-height: 52px;
     flex-direction: row;
     border-right: none;
     border-top: 1px solid var(--color-border);
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 0 8px;
+    /* All tools fit on one row — the bar must not scroll */
+    overflow: hidden;
+    padding: 0 4px;
+    /* Keep tools above the home indicator */
+    padding-bottom: env(safe-area-inset-bottom);
     gap: 0;
     order: 2;           /* sits below CanvasArea */
     flex-shrink: 0;
@@ -93,15 +95,27 @@ const drawingTools: ToolDefinition[] = [
     flex-direction: row;
     border-bottom: none;
     border-right: 1px solid var(--color-border);
-    padding: 0 6px;
+    padding: 0 2px;
     width: auto;
-    gap: 2px;
+    min-width: 0;          /* allow the group to shrink below its content size */
+    gap: 0;
+    justify-content: space-evenly;
   }
 
-  .tool-group:last-child { border-right: none; }
+  /* Share the bar width by button count (8 drawing tools + 2 history) so every
+     tool stays visible without horizontal scrolling. */
+  .tool-group:first-child { flex: 8 1 0; }
+  .tool-group:last-child  { flex: 2 1 0; border-right: none; }
+
+  .tool-group :deep(.tool-btn) {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 48px;
+  }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .toolbar { width: 48px; }
+/* Landscape phones: trim the bottom bar to keep canvas height */
+@media (max-width: 639px) and (orientation: landscape) and (max-height: 500px) {
+  .toolbar { min-height: 44px; }
 }
 </style>
