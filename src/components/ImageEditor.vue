@@ -306,6 +306,7 @@ function exportImage(options: ExportOptions): void {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
 }
 
 .editor-body {
@@ -314,22 +315,26 @@ function exportImage(options: ExportOptions): void {
   overflow: hidden;
 }
 
-/* Mobile backdrop behind the right-panel overlay */
+/* Backdrop behind the right-panel overlay (phone + tablet-portrait) */
 .panel-backdrop {
   display: none;
 }
 
-@media (max-width: 639px) {
-  .editor-body {
-    flex-direction: column;
-  }
-
+/* Panel is a slide-in sheet up to 1024px (phones + iPad portrait) */
+@media (max-width: 1024px) {
   .panel-backdrop {
     display: block;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: 99;
+  }
+}
+
+/* Phones only: stack the toolbar below the canvas */
+@media (max-width: 639px) {
+  .editor-body {
+    flex-direction: column;
   }
 }
 </style>

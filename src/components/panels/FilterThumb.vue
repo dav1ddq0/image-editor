@@ -42,10 +42,16 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   transition: border-color var(--transition), color var(--transition);
 }
 
-.filter-thumb:hover,
 .filter-thumb.active {
   border-color: var(--color-accent);
   color: var(--color-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .filter-thumb:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
 }
 
 /* ── Filter preview styles ──────────────────────────────────────────────────── */

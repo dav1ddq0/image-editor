@@ -2,10 +2,37 @@
   AppNavbar.vue
   Top navigation bar. Renders the brand and action buttons; emits events upward
   so that ImageEditor.vue owns all business logic responses.
+
+  Responsive behavior:
+  - Desktop (≥1025px): icon + label buttons, all actions inline.
+  - Tablet (640–1024px): icon-only buttons (labels hidden), all actions inline.
+  - Phone (≤639px): primary actions inline; secondary actions collapse into the
+    NavbarOverflowMenu so the bar never overflows.
 -->
 <script setup lang="ts">
-defineProps<{ hasImage?: boolean }>()
+import { computed } from 'vue'
+import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
+
+const props = defineProps<{ hasImage?: boolean }>()
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'toggle-panel': [] }>()
+
+// Secondary actions that move into the "⋯ More" menu on phones. Disabled until
+// an image is loaded, mirroring the inline buttons.
+const overflowItems = computed(() => [
+  { key: 'scan-qr',      label: 'Scan QR',      disabled: !props.hasImage },
+  { key: 'scan-barcode', label: 'Scan Barcode', disabled: !props.hasImage },
+  { key: 'ascii-art',    label: 'ASCII Art',    disabled: !props.hasImage },
+  { key: 'extract-text', label: 'Extract Text', disabled: !props.hasImage },
+])
+
+function onOverflowSelect(key: string): void {
+  switch (key) {
+    case 'scan-qr':      emit('scan-qr');      break
+    case 'scan-barcode': emit('scan-barcode'); break
+    case 'ascii-art':    emit('ascii-art');    break
+    case 'extract-text': emit('extract-text'); break
+  }
+}
 </script>
 
 <template>
@@ -29,16 +56,37 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
     </div>
 
     <nav class="navbar-actions">
-      <button class="btn btn-secondary" @click="emit('open')">Open Image</button>
-      <button class="btn btn-primary"   @click="emit('save')">Save</button>
-      <button class="btn btn-secondary" @click="emit('export')">Export</button>
+      <button class="btn btn-secondary icon-btn" title="Open image" @click="emit('open')">
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        </svg>
+        <span class="btn-label">Open Image</span>
+      </button>
+
+      <button class="btn btn-primary icon-btn" title="Save" @click="emit('save')">
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 19h16" />
+        </svg>
+        <span class="btn-label">Save</span>
+      </button>
+
+      <button class="btn btn-secondary icon-btn" title="Export" @click="emit('export')">
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 17V5" /><path d="M8 9l4-4 4 4" /><path d="M4 19h16" />
+        </svg>
+        <span class="btn-label">Export</span>
+      </button>
+
       <button
-        class="btn btn-secondary qr-btn"
+        class="btn btn-secondary icon-btn secondary-action qr-btn"
         :disabled="!hasImage"
         title="Scan QR code"
         @click="emit('scan-qr')"
       >
-        <svg class="qr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3"  y="3"  width="7" height="7" rx="1" />
           <rect x="14" y="3"  width="7" height="7" rx="1" />
@@ -48,15 +96,16 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
           <rect x="5"  y="16" width="3" height="3" fill="currentColor" stroke="none" />
           <path d="M14 14h3v3M17 17h3M14 20h3" />
         </svg>
-        <span class="qr-label">Scan QR</span>
+        <span class="btn-label">Scan QR</span>
       </button>
+
       <button
-        class="btn btn-secondary bc-btn"
+        class="btn btn-secondary icon-btn secondary-action bc-btn"
         :disabled="!hasImage"
         title="Scan barcode"
         @click="emit('scan-barcode')"
       >
-        <svg class="bc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
           <line x1="4"  y1="4" x2="4"  y2="20" />
           <line x1="7"  y1="4" x2="7"  y2="20" stroke-width="2.5" />
@@ -66,36 +115,43 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
           <line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5" />
           <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
         </svg>
-        <span class="bc-label">Scan Barcode</span>
+        <span class="btn-label">Scan Barcode</span>
       </button>
+
       <button
-        class="btn btn-secondary ascii-btn"
+        class="btn btn-secondary icon-btn secondary-action ascii-btn"
         :disabled="!hasImage"
         title="Generate ASCII art"
         @click="emit('ascii-art')"
       >
-        <img src="/fish-ascii.svg" class="ascii-icon" alt="" aria-hidden="true" />
-        <span class="ascii-label">ASCII Art</span>
+        <img src="/fish-ascii.svg" class="act-icon ascii-icon" alt="" aria-hidden="true" />
+        <span class="btn-label">ASCII Art</span>
       </button>
+
       <button
-        class="btn btn-secondary ocr-btn"
+        class="btn btn-secondary icon-btn secondary-action ocr-btn"
         :disabled="!hasImage"
         title="Extract text from image"
         @click="emit('extract-text')"
       >
-        <svg class="ocr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <!-- Document outline -->
           <rect x="4" y="2" width="13" height="18" rx="2" />
-          <!-- Folded corner -->
           <path d="M14 2v5h5" stroke-width="1.4" />
-          <!-- Text lines -->
           <line x1="7" y1="11" x2="15" y2="11" />
           <line x1="7" y1="14" x2="15" y2="14" />
           <line x1="7" y1="17" x2="11" y2="17" />
         </svg>
-        <span class="ocr-label">Extract Text</span>
+        <span class="btn-label">Extract Text</span>
       </button>
+
+      <!-- Phone-only: holds the secondary actions so the bar never overflows -->
+      <NavbarOverflowMenu
+        class="overflow-only"
+        :items="overflowItems"
+        @select="onOverflowSelect"
+      />
+
       <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
     </nav>
 
@@ -108,10 +164,13 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
   align-items: center;
   justify-content: space-between;
   background: var(--color-surface);
-  padding: 0 20px;
-  height: 52px;
+  min-height: 52px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
+  /* Respect the iPhone notch / Dynamic Island and landscape side insets. */
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
 }
 
 .navbar-brand {
@@ -139,58 +198,52 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
 
 .navbar-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-/* QR scan button */
-.qr-btn {
+/* Buttons that pair an icon with a label */
+.icon-btn {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.qr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.qr-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Barcode scan button */
-.bc-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.bc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.bc-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.act-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.ascii-icon { width: 24px; height: 18px; }
 
-/* ASCII art button */
-.ascii-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.ascii-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ascii-icon { width: 24px; height: 18px; flex-shrink: 0; }
-
-/* Extract Text button */
-.ocr-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.ocr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ocr-icon { width: 16px; height: 16px; flex-shrink: 0; }
-
-/* Only show on mobile */
+/* Shown only when the panel is a slide-in sheet (≤1024px) */
 .panel-toggle { display: none; }
+/* Shown only on phones (secondary actions live in the menu there) */
+.overflow-only { display: none; }
 
-@media (max-width: 639px) {
-  .navbar { height: 48px; padding: 0 12px; }
-  .brand-name { display: none; }
-  .navbar-actions { gap: 6px; }
-  .btn { padding: 5px 10px; font-size: 0.75rem; }
+/* ── Tablet: icon-only, keep every action inline ── */
+@media (max-width: 1024px) {
+  .btn-label { display: none; }
   .panel-toggle { display: flex; align-items: center; justify-content: center; }
 }
 
-@media (max-width: 360px) {
-  /* Extra small: hide Save label, keep Export as icon-only */
-  .navbar-actions .btn:not(.panel-toggle) { padding: 5px 8px; }
+/* ── Phone: move secondary actions into the overflow menu ── */
+@media (max-width: 639px) {
+  .navbar {
+    min-height: 48px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .navbar-actions { gap: 6px; }
+  .brand-name { display: none; }
+  .secondary-action { display: none; }
+  .overflow-only { display: flex; }
+}
+
+/* ── Landscape phones: reclaim vertical space ── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .navbar { min-height: 44px; }
+}
+
+/* ── Touch devices: comfortable square tap targets for icon-only buttons ── */
+@media (hover: none), (pointer: coarse) {
+  .navbar-actions .btn { min-width: 48px; justify-content: center; }
 }
 </style>

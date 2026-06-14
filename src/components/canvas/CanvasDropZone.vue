@@ -47,10 +47,16 @@ function onDrop(event: DragEvent): void {
   cursor: default;
 }
 
-.drop-zone:hover,
 .drop-zone.dragging {
   border-color: var(--color-accent);
   color: var(--color-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .drop-zone:hover {
+    border-color: var(--color-accent);
+    color: var(--color-muted);
+  }
 }
 
 .drop-icon {

@@ -138,6 +138,8 @@ function close(): void {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 .dialog {
@@ -146,9 +148,11 @@ function close(): void {
   border-radius: var(--radius-md);
   width: 420px;
   max-width: 95vw;
+  max-height: calc(100dvh - 32px);
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow: hidden auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
@@ -178,7 +182,9 @@ function close(): void {
   transition: color var(--transition);
 }
 
-.close-btn:hover { color: var(--color-accent); }
+@media (hover: hover) and (pointer: fine) {
+  .close-btn:hover { color: var(--color-accent); }
+}
 
 /* Body */
 .dialog-body {
@@ -221,7 +227,9 @@ function close(): void {
   transition: border-color var(--transition);
 }
 
-.format-btn:hover   { border-color: var(--color-muted); }
+@media (hover: hover) and (pointer: fine) {
+  .format-btn:hover { border-color: var(--color-muted); }
+}
 .format-btn.active  { border-color: var(--color-accent); }
 
 .format-ext {
@@ -296,7 +304,7 @@ function close(): void {
     width: 100%;
     max-width: 100%;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
-    max-height: 90vh;
+    max-height: 90dvh;
     overflow-y: auto;
   }
 }

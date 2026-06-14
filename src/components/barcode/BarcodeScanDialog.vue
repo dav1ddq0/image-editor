@@ -92,18 +92,21 @@ function close(): void {
   align-items: center;
   justify-content: center;
   z-index: 200;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 .bc-dialog {
   width: 420px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden auto;
 }
 
 /* ── Header ── */
@@ -131,7 +134,9 @@ function close(): void {
   border-radius: var(--radius-sm);
   transition: color var(--transition);
 }
-.bc-close:hover { color: var(--color-text); }
+@media (hover: hover) and (pointer: fine) {
+  .bc-close:hover { color: var(--color-text); }
+}
 
 /* ── Body ── */
 .bc-body {
