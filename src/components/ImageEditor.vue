@@ -320,8 +320,8 @@ function exportImage(options: ExportOptions): void {
   display: none;
 }
 
-/* Panel is a slide-in sheet up to 1024px (phones + iPad portrait) */
-@media (max-width: 1024px) {
+/* Panel is a slide-in sheet up to 1240px (phones + all tablets incl. iPad Pro 11" landscape) */
+@media (max-width: 1240px) {
   .panel-backdrop {
     display: block;
     position: fixed;

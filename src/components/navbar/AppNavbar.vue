@@ -218,9 +218,12 @@ function onOverflowSelect(key: string): void {
 /* Shown only on phones (secondary actions live in the menu there) */
 .overflow-only { display: none; }
 
-/* ── Tablet: icon-only, keep every action inline ── */
-@media (max-width: 1024px) {
+/* ── Tablet: icon-only, keep every action inline ──
+   Ceiling is 1240px so iPad Pro 11" in landscape (≈1194px) gets the tablet
+   treatment; iPad Pro 13" in landscape (≈1376px) keeps the desktop layout. */
+@media (max-width: 1240px) {
   .btn-label { display: none; }
+  .navbar-actions { gap: 8px; }
   .panel-toggle { display: flex; align-items: center; justify-content: center; }
 }
 

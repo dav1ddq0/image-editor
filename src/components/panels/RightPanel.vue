@@ -57,8 +57,9 @@ const editor = useEditorStore()
 /* Mobile header shown only when the panel is a sheet */
 .panel-mobile-header { display: none; }
 
-/* Slide-in sheet on phones AND tablet-portrait (≤1024px); docked on desktop */
-@media (max-width: 1024px) {
+/* Slide-in sheet on phones AND tablets (≤1240px, covers iPad Pro 11" landscape
+   at ≈1194px); docked on desktop / iPad Pro 13" landscape (≈1376px). */
+@media (max-width: 1240px) {
   .right-panel {
     position: fixed;
     top: 0;
