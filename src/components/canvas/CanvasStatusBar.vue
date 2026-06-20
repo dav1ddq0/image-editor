@@ -157,4 +157,9 @@ function stepZoomOut(): void {
   .zoom-btn  { width: 40px; height: 40px; }
   .zoom-value { height: 40px; }
 }
+
+/* Touch + tablet/desktop: min-height must absorb the safe-area padding (border-box) */
+@media (hover: none) and (min-width: 640px), (pointer: coarse) and (min-width: 640px) {
+  .statusbar { min-height: calc(48px + env(safe-area-inset-bottom)); }
+}
 </style>
