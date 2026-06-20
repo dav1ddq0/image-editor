@@ -1,6 +1,6 @@
 <!--
   CanvasStatusBar.vue
-  Footer bar: zoom controls on the left, file name in the middle, dimensions on the right.
+  Footer bar: file name on the left, zoom controls centred, dimensions on the right.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
@@ -34,19 +34,21 @@ function stepZoomOut(): void {
 <template>
   <footer class="statusbar">
 
-    <!-- Zoom controls -->
-    <div class="zoom-controls">
-      <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10" @click="stepZoomOut">−</button>
-      <button class="zoom-value" title="Reset zoom to 100%" @click="editor.zoomReset">{{ editor.zoom }}%</button>
-      <button class="zoom-btn" title="Zoom in"  :disabled="editor.zoom >= 500" @click="stepZoomIn">+</button>
-    </div>
-
-    <span class="divider">—</span>
+    <!-- Left: file name -->
     <span class="filename">{{ imageName ?? 'No image loaded' }}</span>
 
-    <span class="spacer" />
-    <span v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</span>
-    <span v-else>W: — &nbsp; H: —</span>
+    <!-- Center: zoom controls -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" title="Zoom out" :disabled="!editor.hasImage || editor.zoom <= 10" @click="stepZoomOut">−</button>
+      <button class="zoom-value" title="Reset zoom to 100%" :disabled="!editor.hasImage" @click="editor.zoomReset">{{ editor.zoom }}%</button>
+      <button class="zoom-btn" title="Zoom in"  :disabled="!editor.hasImage || editor.zoom >= 500" @click="stepZoomIn">+</button>
+    </div>
+
+    <!-- Right: dimensions -->
+    <span class="dimensions">
+      <template v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</template>
+      <template v-else>W: — &nbsp; H: —</template>
+    </span>
 
   </footer>
 </template>
@@ -56,23 +58,28 @@ function stepZoomOut(): void {
   height: 32px;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 0 16px;
-  gap: 16px;
+  gap: 8px;
   font-size: 0.78rem;
   color: var(--color-subtle);
   flex-shrink: 0;
 }
 
-.divider { opacity: 0.4; }
-.spacer  { flex: 1; }
-
-/* Truncate long file names instead of letting them break the row */
+/* Left column */
 .filename {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  justify-self: start;
+}
+
+/* Right column */
+.dimensions {
+  justify-self: end;
   white-space: nowrap;
 }
 
@@ -106,12 +113,13 @@ function stepZoomOut(): void {
   }
 }
 
-.zoom-btn:disabled {
+.zoom-btn:disabled,
+.zoom-value:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
 
-/* Zoom percentage — acts as a reset button */
+/* Zoom percentage */
 .zoom-value {
   min-width: 48px;
   height: 22px;
@@ -128,37 +136,35 @@ function stepZoomOut(): void {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .zoom-value:hover {
+  .zoom-value:hover:not(:disabled) {
     border-color: var(--color-accent);
     color: var(--color-accent);
   }
 }
 
 @media (max-width: 639px) {
-  .statusbar { gap: 10px; padding: 0 10px; font-size: 0.72rem; }
-  .divider   { display: none; }
-  /* Hide the dimensions readout on small screens */
-  .statusbar > span:last-child { display: none; }
+  .statusbar { padding: 0 10px; font-size: 0.72rem; }
+  .dimensions { display: none; }
 }
 
-/* Tablet/desktop: the status bar is the bottom-most chrome, so honor the inset */
+/* Tablet/desktop */
 @media (min-width: 640px) {
   .statusbar { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Landscape phones: drop the status bar to reclaim vertical space */
+/* Landscape phones */
 @media (orientation: landscape) and (max-height: 500px) {
   .statusbar { display: none; }
 }
 
-/* Touch devices: larger zoom controls in a taller status bar */
+/* Touch devices */
 @media (hover: none), (pointer: coarse) {
   .statusbar { min-height: 48px; }
   .zoom-btn  { width: 40px; height: 40px; }
   .zoom-value { height: 40px; }
 }
 
-/* Touch + tablet/desktop: min-height must absorb the safe-area padding (border-box) */
+/* Touch + tablet/desktop */
 @media (hover: none) and (min-width: 640px), (pointer: coarse) and (min-width: 640px) {
   .statusbar { min-height: calc(48px + env(safe-area-inset-bottom)); }
 }
