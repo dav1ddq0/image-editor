@@ -8,23 +8,26 @@ import type { FilterId } from '@/types/editor'
 
 // `id` doubles as a CSS class name so scoped styles can target each preset individually
 withDefaults(defineProps<{
-  id:      FilterId
-  label:   string
-  active?: boolean
-}>(), { active: false })
+  id:        FilterId
+  label:     string
+  active?:   boolean
+  disabled?: boolean
+}>(), { active: false, disabled: false })
 
 const emit = defineEmits<{ select: [id: FilterId] }>()
 </script>
 
 <template>
-  <div
+  <button
+    type="button"
     class="filter-thumb"
     :class="[id, { active }]"
+    :disabled="disabled"
     :title="label"
     @click="emit('select', id)"
   >
     {{ label }}
-  </div>
+  </button>
 </template>
 
 <style scoped>
@@ -47,8 +50,13 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   color: var(--color-text);
 }
 
+.filter-thumb:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .filter-thumb:hover {
+  .filter-thumb:hover:not(:disabled) {
     border-color: var(--color-accent);
     color: var(--color-text);
   }

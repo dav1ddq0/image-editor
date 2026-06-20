@@ -33,6 +33,7 @@ const filters: FilterDefinition[] = [
         :id="filter.id"
         :label="filter.label"
         :active="editor.selectedFilter === filter.id"
+        :disabled="!editor.hasImage"
         @select="editor.selectFilter"
       />
     </div>
