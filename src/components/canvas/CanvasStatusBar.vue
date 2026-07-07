@@ -111,7 +111,8 @@ function stepZoomOut(): void {
   }
 }
 
-.zoom-btn:disabled {
+.zoom-btn:disabled,
+.zoom-value:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
@@ -152,14 +153,14 @@ function stepZoomOut(): void {
   .statusbar { display: none; }
 }
 
-/* Touch devices: larger zoom controls in a taller status bar */
+/* Touch devices */
 @media (hover: none), (pointer: coarse) {
   .statusbar { min-height: 48px; }
   .zoom-btn  { width: 44px; height: 40px; }
   .zoom-value { height: 40px; }
 }
 
-/* Touch + tablet/desktop: min-height must absorb the safe-area padding (border-box) */
+/* Touch + tablet/desktop */
 @media (hover: none) and (min-width: 640px), (pointer: coarse) and (min-width: 640px) {
   .statusbar { min-height: calc(48px + env(safe-area-inset-bottom)); }
 }
