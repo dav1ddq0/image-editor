@@ -1,7 +1,5 @@
 <!--
-  AppToolbar.vue
-  Vertical left-side toolbar. Renders drawing tools and history tools in separate
-  groups; reads selectedTool from the store to highlight the active tool.
+  Vertical left-side toolbar.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
@@ -11,17 +9,16 @@ import type { ToolDefinition } from '@/types/editor'
 const editor = useEditorStore()
 
 const drawingTools: ToolDefinition[] = [
-  { id: 'select', icon: '↖', label: 'Select' },
-  { id: 'crop',   icon: '⊡', label: 'Crop' },
-  { id: 'brush',  icon: '🖌', label: 'Brush' },
-  { id: 'eraser', icon: '◻', label: 'Eraser' },
-  { id: 'text',   icon: 'T',  label: 'Text' },
-  { id: 'shapes', icon: '◯', label: 'Shapes' },
-  { id: 'fill',   icon: '🪣', label: 'Fill' },
-  { id: 'zoom',   icon: '🔍', label: 'Zoom In' },
+  { id: 'select', icon: 'mdi-cursor-default-outline', label: 'Select' },
+  { id: 'crop',   icon: 'mdi-crop',                   label: 'Crop' },
+  { id: 'brush',  icon: 'mdi-brush-outline',          label: 'Brush' },
+  { id: 'eraser', icon: 'mdi-eraser',                 label: 'Eraser' },
+  { id: 'text',   icon: 'mdi-format-text',            label: 'Text' },
+  { id: 'shapes', icon: 'mdi-shape-outline',          label: 'Shapes' },
+  { id: 'fill',   icon: 'mdi-format-color-fill',      label: 'Fill' },
+  { id: 'zoom',   icon: 'mdi-magnify-plus-outline',   label: 'Zoom In' },
 ]
 
-// Undo/redo are action triggers, not mode selectors — handled separately.
 </script>
 
 <template>
@@ -39,8 +36,8 @@ const drawingTools: ToolDefinition[] = [
     </div>
 
     <div class="tool-group">
-      <ToolButton icon="↩" label="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()" />
-      <ToolButton icon="↪" label="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()" />
+      <ToolButton icon="mdi-undo" label="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()" />
+      <ToolButton icon="mdi-redo" label="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()" />
     </div>
 
   </aside>
@@ -65,13 +62,15 @@ const drawingTools: ToolDefinition[] = [
   align-items: center;
   gap: 4px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--color-border);
   width: 100%;
 }
 
-/* Avoid a double-border at the bottom of the last group */
-.tool-group:last-child {
-  border-bottom: none;
+.tool-group:not(:last-child)::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--color-border);
+  margin-top: 12px;
 }
 
 @media (max-width: 639px) {
@@ -81,31 +80,33 @@ const drawingTools: ToolDefinition[] = [
     flex-direction: row;
     border-right: none;
     border-top: 1px solid var(--color-border);
-    /* All tools fit on one row — the bar must not scroll */
     overflow: hidden;
     padding: 0 4px;
-    /* Keep tools above the home indicator */
     padding-bottom: env(safe-area-inset-bottom);
     gap: 0;
-    order: 2;           /* sits below CanvasArea */
+    order: 2;           
     flex-shrink: 0;
   }
 
   .tool-group {
     flex-direction: row;
-    border-bottom: none;
-    border-right: 1px solid var(--color-border);
+    align-items: center;
     padding: 0 2px;
     width: auto;
-    min-width: 0;          /* allow the group to shrink below its content size */
+    min-width: 0;          
     gap: 0;
     justify-content: space-evenly;
   }
 
-  /* Share the bar width by button count (8 drawing tools + 2 history) so every
-     tool stays visible without horizontal scrolling. */
+  .tool-group:not(:last-child)::after {
+    width: 1px;
+    height: 24px;
+    margin-top: 0;
+    margin-left: 2px;
+  }
+
   .tool-group:first-child { flex: 8 1 0; }
-  .tool-group:last-child  { flex: 2 1 0; border-right: none; }
+  .tool-group:last-child  { flex: 2 1 0; }
 
   .tool-group :deep(.tool-btn) {
     flex: 1 1 0;
@@ -114,8 +115,19 @@ const drawingTools: ToolDefinition[] = [
   }
 }
 
-/* Landscape phones: trim the bottom bar to keep canvas height */
 @media (max-width: 639px) and (orientation: landscape) and (max-height: 500px) {
   .toolbar { min-height: 44px; }
+}
+
+@media (min-width: 640px) and (max-height: 500px) {
+  .toolbar {
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding: 6px 0;
+    scrollbar-width: none; 
+  }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .tool-group { padding: 4px 0; flex-shrink: 0; }
+  .tool-group:not(:last-child)::after { margin-top: 6px; }
 }
 </style>

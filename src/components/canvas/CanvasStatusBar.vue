@@ -1,5 +1,4 @@
 <!--
-  CanvasStatusBar.vue
   Footer bar: file name on the left, zoom controls centred, dimensions on the right.
 -->
 <script setup lang="ts">
@@ -34,17 +33,14 @@ function stepZoomOut(): void {
 <template>
   <footer class="statusbar">
 
-    <!-- Left: file name -->
     <span class="filename">{{ imageName ?? 'No image loaded' }}</span>
 
-    <!-- Center: zoom controls -->
-    <div class="zoom-controls">
+    <div v-if="!editor.zoomLocked" class="zoom-controls">
       <button class="zoom-btn" title="Zoom out" :disabled="!editor.hasImage || editor.zoom <= 10" @click="stepZoomOut">−</button>
       <button class="zoom-value" title="Reset zoom to 100%" :disabled="!editor.hasImage" @click="editor.zoomReset">{{ editor.zoom }}%</button>
       <button class="zoom-btn" title="Zoom in"  :disabled="!editor.hasImage || editor.zoom >= 500" @click="stepZoomIn">+</button>
     </div>
 
-    <!-- Right: dimensions -->
     <span class="dimensions">
       <template v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</template>
       <template v-else>W: — &nbsp; H: —</template>
@@ -68,47 +64,49 @@ function stepZoomOut(): void {
   flex-shrink: 0;
 }
 
-/* Left column */
 .filename {
+  grid-column: 1;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   justify-self: start;
 }
 
-/* Right column */
 .dimensions {
+  grid-column: 3;
   justify-self: end;
   white-space: nowrap;
 }
 
-/* Zoom cluster */
 .zoom-controls {
+  grid-column: 2;
   display: flex;
-  align-items: center;
-  gap: 2px;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .zoom-btn {
-  width: 22px;
+  width: 26px;
   height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: none;
   color: var(--color-muted);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .zoom-btn:hover:not(:disabled) {
-    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
     color: var(--color-accent);
   }
 }
@@ -119,25 +117,25 @@ function stepZoomOut(): void {
   cursor: not-allowed;
 }
 
-/* Zoom percentage */
 .zoom-value {
   min-width: 48px;
   height: 22px;
   padding: 0 6px;
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-inline: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: 0.78rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
   text-align: center;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .zoom-value:hover:not(:disabled) {
-    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
     color: var(--color-accent);
   }
 }
@@ -147,12 +145,10 @@ function stepZoomOut(): void {
   .dimensions { display: none; }
 }
 
-/* Tablet/desktop */
 @media (min-width: 640px) {
   .statusbar { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Landscape phones */
 @media (orientation: landscape) and (max-height: 500px) {
   .statusbar { display: none; }
 }
@@ -160,7 +156,7 @@ function stepZoomOut(): void {
 /* Touch devices */
 @media (hover: none), (pointer: coarse) {
   .statusbar { min-height: 48px; }
-  .zoom-btn  { width: 40px; height: 40px; }
+  .zoom-btn  { width: 44px; height: 40px; }
   .zoom-value { height: 40px; }
 }
 

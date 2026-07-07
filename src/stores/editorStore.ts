@@ -1,15 +1,8 @@
-/*
- * editorStore.ts
- * Single source of truth for the image editor: active tool, zoom, loaded image,
- * filter preset, and all adjustment values.
- */
-
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect, TextLayer } from '@/types/editor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 
-// Internal snapshot type — not part of the public API
 interface HistorySnapshot {
   image:          ImageDescriptor
   rotation:       number
@@ -22,9 +15,7 @@ interface HistorySnapshot {
 const MAX_HISTORY = 50
 
 export const useEditorStore = defineStore('editor', () => {
-  // ── State ──────────────────────────────────────────────────────────────────
-
-  const selectedTool   = ref<ToolId>('select')
+  const selectedTool   = ref<ToolId | null>(null)
   const zoom           = ref<number>(100)
   const image          = ref<ImageDescriptor | null>(null)
   const originalImage  = ref<ImageDescriptor | null>(null)
@@ -46,8 +37,6 @@ export const useEditorStore = defineStore('editor', () => {
     blur:       0,
   })
 
-  // ── History ────────────────────────────────────────────────────────────────
-
   const undoStack = ref<HistorySnapshot[]>([])
   const redoStack = ref<HistorySnapshot[]>([])
 
@@ -65,8 +54,6 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
 
-  // Pushes current state onto the undo stack and clears redo.
-  // Called at the START of every mutating action (before the change).
   function pushHistory(): void {
     if (!image.value) return
     undoStack.value.push(captureSnapshot())
@@ -95,8 +82,6 @@ export const useEditorStore = defineStore('editor', () => {
     applySnapshot(redoStack.value.pop()!)
   }
 
-  // Called by AdjustmentSlider on pointerdown — takes ONE snapshot per drag
-  // gesture so continuous slider moves don't flood the undo stack.
   function beginAdjustment(): void {
     pushHistory()
   }
@@ -104,6 +89,10 @@ export const useEditorStore = defineStore('editor', () => {
   // ── Getters (computed) ─────────────────────────────────────────────────────
 
   const hasImage = computed<boolean>(() => !!image.value)
+
+  const zoomLocked = computed<boolean>(() =>
+    selectedTool.value !== null && selectedTool.value !== 'zoom'
+  )
 
   // Combines rotation and flip into a single CSS transform string
   const cssTransform = computed<string>(() => {
@@ -115,8 +104,6 @@ export const useEditorStore = defineStore('editor', () => {
   })
 
   // Builds the CSS filter string applied to the canvas image.
-  // Preset filters are combined with the numeric adjustment sliders so both
-  // work simultaneously and react to each other in real time.
   const cssFilter = computed<string>(() => {
     const parts: string[] = []
 
@@ -143,7 +130,6 @@ export const useEditorStore = defineStore('editor', () => {
     if (adjustments.blur !== 0)
       parts.push(`blur(${(adjustments.blur / 10).toFixed(1)}px)`)
 
-    // url() references the SVG feConvolveMatrix filter defined in CanvasArea.vue
     if (adjustments.sharpness > 0)
       parts.push('url(#image-sharpen)')
 
@@ -152,21 +138,20 @@ export const useEditorStore = defineStore('editor', () => {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  function selectTool(tool: ToolId): void {
-    selectedTool.value = tool
+  // Clicking the already-active tool toggles back to the neutral mode.
+  function selectTool(tool: ToolId | null): void {
+    selectedTool.value = selectedTool.value === tool ? null : tool
   }
 
   function loadImage(file: File): void {
     const url = URL.createObjectURL(file)
-    // Blob URL is intentionally never revoked — it is the canonical image source
-    // for the lifetime of the session and must remain valid for the <img> element.
-
     const img = new Image()
 
     img.onload = () => {
-      // Clear history when a new image is loaded — undo/redo is per-image.
+      // Clear history when a new image is loaded
       undoStack.value = []
       redoStack.value = []
+      selectedTool.value = null
 
       const descriptor: ImageDescriptor = {
         src:    url,
@@ -182,8 +167,6 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   function updateAdjustment(key: AdjustmentKey, value: number): void {
-    // Number() cast guards against string values emitted by HTML range inputs.
-    // History is NOT pushed here; beginAdjustment() handles that on pointerdown.
     adjustments[key] = Number(value)
   }
 
@@ -222,7 +205,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   function applyCrop(normalizedRect: CropRect): void {
     if (!image.value) return
-    // Snapshot before the async crop so it can be undone.
+
     pushHistory()
     const source = image.value
     const renderOpts = {
@@ -244,15 +227,14 @@ export const useEditorStore = defineStore('editor', () => {
       output.height = cropH
       output.getContext('2d')!.drawImage(rendered, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
       const dataUrl = output.toDataURL('image/png')
-      // Do NOT revoke source.src — it may still be referenced by a history entry.
       image.value = { src: dataUrl, width: cropW, height: cropH, name: source.name }
-      // Reset all effects since they are now baked into the new image
+      // Reset all effects
       rotation.value = 0
       flipH.value    = false
       flipV.value    = false
       Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
       selectedFilter.value = 'none'
-      selectedTool.value   = 'select'
+      selectedTool.value   = null
     }
     img.src = source.src
   }
@@ -274,10 +256,6 @@ export const useEditorStore = defineStore('editor', () => {
     }
     const img = new Image()
     img.onload = () => {
-      // Render all effects into a source canvas, then copy into a fresh output
-      // canvas whose context has never had ctx.filter set.  clearRect on a
-      // pristine context is the only reliable way to produce true transparency
-      // (Chromium applies residual filter state to clearRect on the same ctx).
       const rendered = buildRenderedCanvas(img, renderOpts)
       const output   = document.createElement('canvas')
       output.width   = rendered.width
@@ -295,7 +273,7 @@ export const useEditorStore = defineStore('editor', () => {
       flipH.value          = false
       flipV.value          = false
       selectedFilter.value = 'none'
-      selectedTool.value   = 'select'
+      selectedTool.value   = null
       Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
     }
     img.src = source.src
@@ -305,18 +283,16 @@ export const useEditorStore = defineStore('editor', () => {
   function resetImage(): void {
     if (!originalImage.value) return
     pushHistory()
-    // Spread into a new object so CanvasArea's image watcher always fires and re-fits zoom.
     image.value          = { ...originalImage.value }
     rotation.value       = 0
     flipH.value          = false
     flipV.value          = false
     selectedFilter.value = 'none'
-    selectedTool.value   = 'select'
+    selectedTool.value   = null
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 
-  // Maps a normalized display-space click (nx, ny) to canvas pixel coordinates,
-  // accounting for the same rotation/flip sequence used in buildRenderedCanvas.
+  // Maps a normalized display-space click (nx, ny) to canvas pixel coordinates
   function mapDisplayToCanvas(
     nx: number, ny: number,
     rot: number, fH: boolean, fV: boolean,
@@ -383,14 +359,13 @@ export const useEditorStore = defineStore('editor', () => {
       flipH.value          = false
       flipV.value          = false
       selectedFilter.value = 'none'
-      selectedTool.value   = 'select'
+      selectedTool.value   = null
       Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
     }
     img.src = source.src
   }
 
-  // Saves a fill result. Does NOT reset selectedTool so the user can keep
-  // filling multiple regions without re-selecting the tool.
+  // Saves a fill result.
   function saveFillResult(src: string, w: number, h: number): void {
     if (!image.value) return
     pushHistory()
@@ -401,10 +376,9 @@ export const useEditorStore = defineStore('editor', () => {
     flipV.value          = false
     selectedFilter.value = 'none'
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
-    // selectedTool intentionally left as 'fill'
   }
 
-  // Saves the composited shapes result (same contract as saveBrushResult).
+  // Saves the composited shapes result.
   function saveShapesResult(src: string, w: number, h: number): void {
     if (!image.value) return
     pushHistory()
@@ -414,12 +388,11 @@ export const useEditorStore = defineStore('editor', () => {
     flipH.value          = false
     flipV.value          = false
     selectedFilter.value = 'none'
-    selectedTool.value   = 'select'
+    selectedTool.value   = null
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 
-  // Saves the composited brush result. Compositing is done by CanvasArea using
-  // the already-loaded imgRef element, so this action is synchronous.
+  // Saves the composited brush result.
   function saveBrushResult(src: string, w: number, h: number): void {
     if (!image.value) return
     pushHistory()
@@ -429,11 +402,10 @@ export const useEditorStore = defineStore('editor', () => {
     flipH.value          = false
     flipV.value          = false
     selectedFilter.value = 'none'
-    selectedTool.value   = 'select'
+    selectedTool.value   = null
     Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
   }
 
-  // ── Public API ─────────────────────────────────────────────────────────────
   return {
     selectedTool,
     zoom,
@@ -444,6 +416,7 @@ export const useEditorStore = defineStore('editor', () => {
     flipV,
     adjustments,
     hasImage,
+    zoomLocked,
     canUndo,
     canRedo,
     cssFilter,

@@ -1,11 +1,8 @@
 <!--
-  AdjustmentSlider.vue
-  Reusable labeled range-input row (label | track | value readout).
-  Implements the v-model contract; emits a typed Number to avoid string/number
-  drift that arises from native HTML input events.
+  Reusable labeled slider row (label | track | value readout).
 -->
 <script setup lang="ts">
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   label:       string
   modelValue?: number
   min?:        number
@@ -25,54 +22,51 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <!--
-    Three-column grid: label (80px) | range track (1fr) | value readout (32px)
-  -->
   <div class="adjustment-row">
+    <label class="adjustment-label">{{ label }}</label>
 
-    <label>{{ label }}</label>
-
-    <!--
-      :value one-way binding is used instead of v-model because we need to emit
-      a Number, not the string that v-model would produce from a range input.
-    -->
-    <input
-      type="range"
+    <v-slider
+      class="adjustment-slider"
+      :model-value="modelValue"
       :min="min"
       :max="max"
-      :value="modelValue"
+      :step="1"
       :disabled="disabled"
-      @pointerdown="emit('dragstart')"
-      @input="emit('update:modelValue', Number(($event.target as HTMLInputElement).value))"
+      color="primary"
+      density="compact"
+      hide-details
+      thumb-size="14"
+      track-size="3"
+      @start="emit('dragstart')"
+      @update:model-value="emit('update:modelValue', Math.round($event))"
     />
 
     <span class="value-label">{{ modelValue }}</span>
-
   </div>
 </template>
 
 <style scoped>
 .adjustment-row {
   display: grid;
-  grid-template-columns: 80px 1fr 32px;
+  grid-template-columns: 78px 1fr 34px;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
-.adjustment-row label {
+.adjustment-label {
   font-size: 0.82rem;
   color: var(--color-muted);
 }
 
-input[type="range"] {
-  accent-color: var(--color-accent);
-  width: 100%;
+.adjustment-slider {
+  margin: 0;
 }
 
 .value-label {
   font-size: 0.78rem;
   color: var(--color-subtle);
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 </style>

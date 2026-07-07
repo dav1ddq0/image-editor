@@ -1,23 +1,16 @@
 <!--
-  AppNavbar.vue
-  Top navigation bar. Renders the brand and action buttons; emits events upward
-  so that ImageEditor.vue owns all business logic responses.
-
-  Responsive behavior:
-  - Desktop (≥1025px): icon + label buttons, all actions inline.
-  - Tablet (640–1024px): icon-only buttons (labels hidden), all actions inline.
-  - Phone (≤639px): primary actions inline; secondary actions collapse into the
-    NavbarOverflowMenu so the bar never overflows.
+  Top navigation bar. Renders the brand and action buttons.
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
 
 const props = defineProps<{ hasImage?: boolean }>()
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'toggle-panel': [] }>()
 
-// Secondary actions that move into the "⋯ More" menu on phones. Disabled until
-// an image is loaded, mirroring the inline buttons.
+const { isDark, toggle: toggleTheme } = useAppTheme()
+
 const overflowItems = computed(() => [
   { key: 'scan-qr',      label: 'Scan QR',      disabled: !props.hasImage },
   { key: 'scan-barcode', label: 'Scan Barcode', disabled: !props.hasImage },
@@ -39,53 +32,39 @@ function onOverflowSelect(key: string): void {
   <header class="navbar">
 
     <div class="navbar-brand">
+      <span class="brand-badge">
       <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <!-- Photo frame -->
         <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
-        <!-- Sun -->
         <circle cx="5.5" cy="6.5" r="1.6" fill="currentColor"/>
-        <!-- Mountain silhouette -->
         <path d="M2.5 14.5 L7 9.5 L10 12 L12.5 9.5 L15.5 14.5"
               stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        <!-- Brush shaft -->
         <line x1="16.5" y1="13.5" x2="22" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <!-- Brush tip / bristles -->
         <path d="M15 15 Q13 18.5 14.2 20 Q15.8 21.2 17.2 19.2 L16.5 13.5 Z" fill="currentColor"/>
       </svg>
+      </span>
       <span class="brand-name">Image Editor</span>
     </div>
 
     <nav class="navbar-actions">
-      <button class="btn btn-secondary icon-btn" title="Open image" @click="emit('open')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        </svg>
+      <v-btn class="nav-btn" variant="text" @click="emit('open')">
+        <v-icon icon="mdi-folder-image" size="20" />
         <span class="btn-label">Open Image</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Open image" />
+      </v-btn>
 
-      <button class="btn btn-primary icon-btn" title="Save" @click="emit('save')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 19h16" />
-        </svg>
+      <v-btn class="nav-btn" variant="text" @click="emit('save')">
+        <v-icon icon="mdi-content-save-outline" size="20" />
         <span class="btn-label">Save</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Save" />
+      </v-btn>
 
-      <button class="btn btn-secondary icon-btn" title="Export" @click="emit('export')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 17V5" /><path d="M8 9l4-4 4 4" /><path d="M4 19h16" />
-        </svg>
+      <v-btn class="nav-btn" variant="text" @click="emit('export')">
+        <v-icon icon="mdi-export-variant" size="20" />
         <span class="btn-label">Export</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Export" />
+      </v-btn>
 
-      <button
-        class="btn btn-secondary icon-btn secondary-action qr-btn"
-        :disabled="!hasImage"
-        title="Scan QR code"
-        @click="emit('scan-qr')"
-      >
+      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('scan-qr')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3"  y="3"  width="7" height="7" rx="1" />
@@ -97,14 +76,10 @@ function onOverflowSelect(key: string): void {
           <path d="M14 14h3v3M17 17h3M14 20h3" />
         </svg>
         <span class="btn-label">Scan QR</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Scan QR code" />
+      </v-btn>
 
-      <button
-        class="btn btn-secondary icon-btn secondary-action bc-btn"
-        :disabled="!hasImage"
-        title="Scan barcode"
-        @click="emit('scan-barcode')"
-      >
+      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('scan-barcode')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
           <line x1="4"  y1="4" x2="4"  y2="20" />
@@ -116,24 +91,16 @@ function onOverflowSelect(key: string): void {
           <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
         </svg>
         <span class="btn-label">Scan Barcode</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Scan barcode" />
+      </v-btn>
 
-      <button
-        class="btn btn-secondary icon-btn secondary-action ascii-btn"
-        :disabled="!hasImage"
-        title="Generate ASCII art"
-        @click="emit('ascii-art')"
-      >
-        <img src="/fish-ascii.svg" class="act-icon ascii-icon" alt="" aria-hidden="true" />
+      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('ascii-art')">
+        <span class="act-icon ascii-icon" aria-hidden="true" />
         <span class="btn-label">ASCII Art</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Generate ASCII art" />
+      </v-btn>
 
-      <button
-        class="btn btn-secondary icon-btn secondary-action ocr-btn"
-        :disabled="!hasImage"
-        title="Extract text from image"
-        @click="emit('extract-text')"
-      >
+      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('extract-text')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="4" y="2" width="13" height="18" rx="2" />
@@ -143,16 +110,27 @@ function onOverflowSelect(key: string): void {
           <line x1="7" y1="17" x2="11" y2="17" />
         </svg>
         <span class="btn-label">Extract Text</span>
-      </button>
+        <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
+      </v-btn>
 
-      <!-- Phone-only: holds the secondary actions so the bar never overflows -->
-      <NavbarOverflowMenu
-        class="overflow-only"
-        :items="overflowItems"
-        @select="onOverflowSelect"
-      />
+      <div class="overflow-only">
+        <NavbarOverflowMenu
+          :items="overflowItems"
+          @select="onOverflowSelect"
+        />
+      </div>
 
-      <button class="btn btn-secondary panel-toggle" @click="emit('toggle-panel')" title="Toggle panel">⊞</button>
+      <!-- Theme toggle (light / dark) -->
+      <v-btn class="nav-icon-btn" variant="text" icon @click="toggleTheme">
+        <v-icon :icon="isDark ? 'mdi-weather-night' : 'mdi-white-balance-sunny'" />
+        <v-tooltip activator="parent" location="bottom" :text="isDark ? 'Switch to light theme' : 'Switch to dark theme'" />
+      </v-btn>
+
+      <!-- Tablet/phone: toggle the right settings panel -->
+      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon @click="emit('toggle-panel')">
+        <v-icon icon="mdi-tune-variant" />
+        <v-tooltip activator="parent" location="bottom" text="Toggle settings panel" />
+      </v-btn>
     </nav>
 
   </header>
@@ -164,13 +142,13 @@ function onOverflowSelect(key: string): void {
   align-items: center;
   justify-content: space-between;
   background: var(--color-surface);
-  min-height: 52px;
+  min-height: 56px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
-  /* Respect the iPhone notch / Dynamic Island and landscape side insets. */
+  box-shadow: var(--shadow-sm);
   padding-top: env(safe-area-inset-top);
-  padding-left: max(20px, env(safe-area-inset-left));
-  padding-right: max(20px, env(safe-area-inset-right));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
 }
 
 .navbar-brand {
@@ -179,7 +157,6 @@ function onOverflowSelect(key: string): void {
   gap: 10px;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-accent);
 }
 
 .brand-name {
@@ -189,64 +166,74 @@ function onOverflowSelect(key: string): void {
   letter-spacing: 0.06em;
 }
 
-.brand-icon {
-  width: 26px;
-  height: 26px;
+.brand-badge {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   flex-shrink: 0;
-  color: var(--color-accent);
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent),
+    color-mix(in oklab, var(--color-accent) 55%, #16213e)
+  );
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
-/* Buttons that pair an icon with a label */
-.icon-btn {
-  display: flex;
-  align-items: center;
+.nav-btn {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+
+.nav-btn :deep(.v-btn__content) {
   gap: 6px;
 }
-.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.act-icon { width: 16px; height: 16px; flex-shrink: 0; }
-.ascii-icon { width: 24px; height: 18px; }
+.act-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
-/* Shown only when the panel is a slide-in sheet (≤1024px) */
+.ascii-icon {
+  width: 24px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: url('/fish-ascii.svg') no-repeat center / contain;
+  mask: url('/fish-ascii.svg') no-repeat center / contain;
+}
+
 .panel-toggle { display: none; }
-/* Shown only on phones (secondary actions live in the menu there) */
+
 .overflow-only { display: none; }
 
-/* ── Tablet: icon-only, keep every action inline ──
-   Ceiling is 1240px so iPad Pro 11" in landscape (≈1194px) gets the tablet
-   treatment; iPad Pro 13" in landscape (≈1376px) keeps the desktop layout. */
 @media (max-width: 1240px) {
   .btn-label { display: none; }
-  .navbar-actions { gap: 8px; }
-  .panel-toggle { display: flex; align-items: center; justify-content: center; }
+  .panel-toggle { display: inline-flex; }
 }
 
-/* ── Phone: move secondary actions into the overflow menu ── */
 @media (max-width: 639px) {
   .navbar {
-    min-height: 48px;
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
+    min-height: 52px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
   }
-  .navbar-actions { gap: 6px; }
   .brand-name { display: none; }
   .secondary-action { display: none; }
-  .overflow-only { display: flex; }
+  .overflow-only { display: inline-flex; }
 }
 
-/* ── Landscape phones: reclaim vertical space ── */
 @media (orientation: landscape) and (max-height: 500px) {
-  .navbar { min-height: 44px; }
-}
-
-/* ── Touch devices: comfortable square tap targets for icon-only buttons ── */
-@media (hover: none), (pointer: coarse) {
-  .navbar-actions .btn { min-width: 48px; justify-content: center; }
+  .navbar { min-height: 46px; }
 }
 </style>

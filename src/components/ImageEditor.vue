@@ -305,8 +305,8 @@ function exportImage(options: ExportOptions): void {
 .editor-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .editor-body {
@@ -326,8 +326,16 @@ function exportImage(options: ExportOptions): void {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     z-index: 99;
+    animation: backdrop-fade-in 0.25s var(--ease-standard);
+  }
+
+  @keyframes backdrop-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 }
 

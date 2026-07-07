@@ -1,10 +1,10 @@
 <!--
-  QrScanDialog.vue
   Modal dialog for the QR code scanner. Shows a scanning spinner while processing,
   then displays either the decoded text (with a copy button) or a not-found message.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useTheme } from 'vuetify'
 
 const props = defineProps<{
   visible: boolean
@@ -15,6 +15,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:visible': [value: boolean]
 }>()
+
+const theme = useTheme()
+
+const dialog = computed({
+  get: () => props.visible,
+  set: (value: boolean) => emit('update:visible', value),
+})
 
 const copied = ref(false)
 
@@ -35,174 +42,74 @@ function close(): void {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="qr-backdrop" @click.self="close">
-      <div class="qr-dialog" role="dialog" aria-modal="true" aria-label="QR Code Scanner">
+  <v-dialog v-model="dialog" max-width="460" :theme="theme.name.value" aria-label="QR Code Scanner">
+    <v-card>
 
-        <!-- Header -->
-        <div class="qr-header">
-          <span class="qr-title">QR Code Scanner</span>
-          <button class="qr-close" @click="close" aria-label="Close">✕</button>
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span>QR Code Scanner</span>
+        <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
+      </v-card-title>
+
+      <v-card-text v-if="state === 'scanning'" class="state-center py-8">
+        <v-progress-circular color="primary" indeterminate size="44" width="3" />
+        <p class="status-text">Scanning image…</p>
+      </v-card-text>
+
+      <v-card-text v-else-if="state === 'found'" class="d-flex flex-column ga-3 py-5">
+        <span class="field-label">Decoded content</span>
+        <v-textarea
+          :model-value="text"
+          readonly
+          rows="5"
+          variant="outlined"
+          hide-details
+          class="mono-field"
+          aria-label="Decoded QR content"
+        />
+        <div class="d-flex justify-end">
+          <v-btn
+            color="primary"
+            variant="flat"
+            :prepend-icon="copied ? 'mdi-check' : 'mdi-content-copy'"
+            @click="copyToClipboard"
+          >{{ copied ? 'Copied!' : 'Copy to clipboard' }}</v-btn>
         </div>
+      </v-card-text>
 
-        <!-- Scanning state -->
-        <div v-if="state === 'scanning'" class="qr-body qr-center">
-          <div class="qr-spinner" aria-label="Scanning…" />
-          <p class="qr-status-text">Scanning image…</p>
-        </div>
+      <v-card-text v-else class="state-center py-8">
+        <v-icon icon="mdi-alert-circle-outline" color="primary" size="44" />
+        <p class="status-text">No QR code found in this image.</p>
+        <v-btn variant="tonal" class="mt-2" @click="close">Close</v-btn>
+      </v-card-text>
 
-        <!-- Found state -->
-        <div v-else-if="state === 'found'" class="qr-body">
-          <p class="qr-label">Decoded content</p>
-          <textarea
-            class="qr-textarea"
-            readonly
-            :value="text"
-            rows="5"
-            aria-label="Decoded QR content"
-          />
-          <button class="btn btn-primary qr-copy-btn" @click="copyToClipboard">
-            {{ copied ? '✓ Copied!' : 'Copy to clipboard' }}
-          </button>
-        </div>
-
-        <!-- Not found state -->
-        <div v-else class="qr-body qr-center">
-          <svg class="qr-warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none" />
-          </svg>
-          <p class="qr-status-text">No QR code found in this image.</p>
-          <button class="btn btn-secondary" style="margin-top: 8px;" @click="close">Close</button>
-        </div>
-
-      </div>
-    </div>
-  </Teleport>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
-.qr-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  /* Keep the dialog clear of notches / home indicator */
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-}
-
-.qr-dialog {
-  width: 420px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 32px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden auto;
-}
-
-/* ── Header ── */
-.qr-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.qr-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.qr-close {
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition);
-}
-@media (hover: hover) and (pointer: fine) {
-  .qr-close:hover { color: var(--color-text); }
-}
-
-/* ── Body ── */
-.qr-body {
-  padding: 20px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.qr-center {
-  align-items: center;
-  text-align: center;
-  padding: 32px 18px;
-}
-
-.qr-label {
+.field-label {
   font-size: 0.78rem;
   color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin: 0;
 }
 
-.qr-textarea {
-  width: 100%;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.85rem;
-  padding: 8px 10px;
-  resize: vertical;
-  outline: none;
+.mono-field :deep(textarea) {
   font-family: monospace;
-  box-sizing: border-box;
+  font-size: 0.85rem;
 }
 
-.qr-copy-btn {
-  align-self: flex-end;
+.state-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
 }
 
-/* ── Spinner ── */
-.qr-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Status text ── */
-.qr-status-text {
+.status-text {
   font-size: 0.88rem;
   color: var(--color-muted);
   margin: 8px 0 0;
-}
-
-/* ── Warning icon ── */
-.qr-warn-icon {
-  width: 40px;
-  height: 40px;
-  color: var(--color-accent);
-  opacity: 0.7;
 }
 </style>
