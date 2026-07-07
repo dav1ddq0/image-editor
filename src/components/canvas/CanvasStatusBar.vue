@@ -1,6 +1,5 @@
 <!--
-  CanvasStatusBar.vue
-  Footer bar: zoom controls on the left, file name in the middle, dimensions on the right.
+  Footer bar: file name on the left, zoom controls centred, dimensions on the right.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
@@ -34,19 +33,18 @@ function stepZoomOut(): void {
 <template>
   <footer class="statusbar">
 
-    <!-- Zoom controls -->
-    <div class="zoom-controls">
-      <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10" @click="stepZoomOut">−</button>
-      <button class="zoom-value" title="Reset zoom to 100%" @click="editor.zoomReset">{{ editor.zoom }}%</button>
-      <button class="zoom-btn" title="Zoom in"  :disabled="editor.zoom >= 500" @click="stepZoomIn">+</button>
-    </div>
-
-    <span class="divider">—</span>
     <span class="filename">{{ imageName ?? 'No image loaded' }}</span>
 
-    <span class="spacer" />
-    <span v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</span>
-    <span v-else>W: — &nbsp; H: —</span>
+    <div v-if="!editor.zoomLocked" class="zoom-controls">
+      <button class="zoom-btn" title="Zoom out" :disabled="!editor.hasImage || editor.zoom <= 10" @click="stepZoomOut">−</button>
+      <button class="zoom-value" title="Reset zoom to 100%" :disabled="!editor.hasImage" @click="editor.zoomReset">{{ editor.zoom }}%</button>
+      <button class="zoom-btn" title="Zoom in"  :disabled="!editor.hasImage || editor.zoom >= 500" @click="stepZoomIn">+</button>
+    </div>
+
+    <span class="dimensions">
+      <template v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</template>
+      <template v-else>W: — &nbsp; H: —</template>
+    </span>
 
   </footer>
 </template>
@@ -56,52 +54,59 @@ function stepZoomOut(): void {
   height: 32px;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 0 16px;
-  gap: 16px;
+  gap: 8px;
   font-size: 0.78rem;
   color: var(--color-subtle);
   flex-shrink: 0;
 }
 
-.divider { opacity: 0.4; }
-.spacer  { flex: 1; }
-
-/* Truncate long file names instead of letting them break the row */
 .filename {
+  grid-column: 1;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  justify-self: start;
 }
 
-/* Zoom cluster */
+.dimensions {
+  grid-column: 3;
+  justify-self: end;
+  white-space: nowrap;
+}
+
 .zoom-controls {
+  grid-column: 2;
   display: flex;
-  align-items: center;
-  gap: 2px;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .zoom-btn {
-  width: 22px;
+  width: 26px;
   height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: none;
   color: var(--color-muted);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .zoom-btn:hover:not(:disabled) {
-    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
     color: var(--color-accent);
   }
 }
@@ -111,42 +116,38 @@ function stepZoomOut(): void {
   cursor: not-allowed;
 }
 
-/* Zoom percentage — acts as a reset button */
 .zoom-value {
   min-width: 48px;
   height: 22px;
   padding: 0 6px;
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-inline: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: 0.78rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
   text-align: center;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .zoom-value:hover {
-    border-color: var(--color-accent);
+  .zoom-value:hover:not(:disabled) {
+    background: var(--color-accent-soft);
     color: var(--color-accent);
   }
 }
 
 @media (max-width: 639px) {
-  .statusbar { gap: 10px; padding: 0 10px; font-size: 0.72rem; }
-  .divider   { display: none; }
-  /* Hide the dimensions readout on small screens */
-  .statusbar > span:last-child { display: none; }
+  .statusbar { padding: 0 10px; font-size: 0.72rem; }
+  .dimensions { display: none; }
 }
 
-/* Tablet/desktop: the status bar is the bottom-most chrome, so honor the inset */
 @media (min-width: 640px) {
   .statusbar { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Landscape phones: drop the status bar to reclaim vertical space */
 @media (orientation: landscape) and (max-height: 500px) {
   .statusbar { display: none; }
 }
@@ -154,7 +155,7 @@ function stepZoomOut(): void {
 /* Touch devices: larger zoom controls in a taller status bar */
 @media (hover: none), (pointer: coarse) {
   .statusbar { min-height: 48px; }
-  .zoom-btn  { width: 40px; height: 40px; }
+  .zoom-btn  { width: 44px; height: 40px; }
   .zoom-value { height: 40px; }
 }
 

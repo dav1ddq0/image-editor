@@ -1,8 +1,6 @@
 <!--
-  TextOverlay.vue
   Text insertion overlay. The user clicks to place an anchor point, types in a
-  styled textarea, then confirms to bake the text into the image via applyText.
-  The text box has a drag handle so it can be repositioned while focused.
+  styled textarea, then confirms to bake the text into the image via apply text.
 -->
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
@@ -19,8 +17,6 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-// ── State ──────────────────────────────────────────────────────────────────
-
 const textareaRef = ref<HTMLTextAreaElement>()
 const placed      = ref(false)
 const posX        = ref(0)
@@ -35,9 +31,6 @@ const italic     = ref(false)
 
 const FONT_FAMILIES = ['sans-serif', 'serif', 'monospace', 'Impact', 'Arial', 'Georgia', 'Courier New']
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-
-// The text-box wrapper carries the position; the textarea itself is unstyled.
 const boxStyle = computed(() => ({
   left: posX.value + 'px',
   top:  posY.value + 'px',
@@ -50,8 +43,6 @@ const inputStyle = computed(() => ({
   fontWeight: bold.value   ? 'bold'   : 'normal',
   fontStyle:  italic.value ? 'italic' : 'normal',
 }))
-
-// ── Drag-to-reposition ─────────────────────────────────────────────────────
 
 function startDrag(e: PointerEvent): void {
   e.preventDefault()
@@ -74,8 +65,6 @@ function startDrag(e: PointerEvent): void {
   handle.addEventListener('pointermove', onMove as EventListener)
   handle.addEventListener('pointerup',   onUp)
 }
-
-// ── Interactions ───────────────────────────────────────────────────────────
 
 async function onOverlayClick(e: MouseEvent): Promise<void> {
   if (placed.value) return
@@ -115,34 +104,40 @@ function confirm(): void {
     :class="{ 'cursor-crosshair': !placed }"
     @click="onOverlayClick"
   >
-    <!-- Floating toolbar -->
     <Teleport to="#canvas-area-host">
     <div class="text-toolbar" @pointerdown.stop @click.stop>
 
-      <select v-model="fontFamily" class="font-select">
+      <select v-model="fontFamily" class="ov-select">
         <option v-for="f in FONT_FAMILIES" :key="f" :value="f">{{ f }}</option>
       </select>
 
       <div class="size-control">
-        <button class="size-btn" @click="fontSize = Math.max(8, fontSize - 2)">−</button>
-        <span class="size-value">{{ fontSize }}</span>
-        <button class="size-btn" @click="fontSize = Math.min(200, fontSize + 2)">+</button>
+        <button class="ov-btn ov-btn--icon" aria-label="Decrease font size" @click="fontSize = Math.max(8, fontSize - 2)">
+          <v-icon icon="mdi-minus" size="15" />
+        </button>
+        <span class="ov-value size-value">{{ fontSize }}</span>
+        <button class="ov-btn ov-btn--icon" aria-label="Increase font size" @click="fontSize = Math.min(200, fontSize + 2)">
+          <v-icon icon="mdi-plus" size="15" />
+        </button>
       </div>
 
-      <button class="fmt-btn" :class="{ active: bold }"   @click="bold = !bold">B</button>
-      <button class="fmt-btn" :class="{ active: italic }" @click="italic = !italic"><em>I</em></button>
+      <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: bold }" aria-label="Bold" @click="bold = !bold">B</button>
+      <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: italic }" aria-label="Italic" @click="italic = !italic"><em>I</em></button>
 
-      <input type="color" v-model="color" class="color-picker" title="Text color" />
+      <input type="color" v-model="color" class="ov-swatch" title="Text color" />
 
-      <div class="toolbar-sep" />
+      <div class="ov-sep" />
 
-      <button class="action-btn cancel"  @click="emit('cancel')">✕</button>
-      <button class="action-btn confirm" :disabled="!text.trim()" @click="confirm">✓</button>
+      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')">
+        <v-icon icon="mdi-close" size="16" />
+      </button>
+      <button class="ov-btn ov-btn--icon ov-btn--primary" :disabled="!text.trim()" aria-label="Apply text" @click="confirm">
+        <v-icon icon="mdi-check" size="16" />
+      </button>
 
     </div>
     </Teleport>
 
-    <!-- Hint before placement -->
     <div v-if="!placed" class="placement-hint">
       <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
         <path d="M4 7V4h3M17 4h3v3M4 17v3h3M17 20h3v-3"/>
@@ -152,11 +147,6 @@ function confirm(): void {
       <span>Click anywhere to place text</span>
     </div>
 
-    <!--
-      Text box: wrapper positioned at (posX, posY).
-      The drag handle at the top can be grabbed at any time — even while the
-      textarea is focused — without interfering with text selection.
-    -->
     <div
       v-if="placed"
       class="text-box"
@@ -168,7 +158,7 @@ function confirm(): void {
         title="Drag to reposition"
         @pointerdown.stop="startDrag"
       >
-        <span class="drag-icon">⠿</span>
+        <v-icon class="drag-icon" icon="mdi-drag-horizontal" size="14" />
       </div>
 
       <textarea
@@ -192,14 +182,12 @@ function confirm(): void {
   user-select: none;
 }
 
-/* Dashed inset border signals that the whole image area is clickable */
 .text-overlay.cursor-crosshair {
   cursor: crosshair;
   outline: 2px dashed var(--color-border);
   outline-offset: -6px;
 }
 
-/* ── Toolbar ─────────────────────────────────────── */
 .text-toolbar {
   position: absolute;
   top: 12px;
@@ -208,108 +196,34 @@ function confirm(): void {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
   z-index: 200;
-}
-
-.font-select {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.78rem;
-  padding: 3px 6px;
-  cursor: pointer;
 }
 
 .size-control {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
-
-.size-btn {
-  width: 20px;
-  height: 20px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-muted);
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.size-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
 .size-value {
   min-width: 28px;
-  font-size: 0.78rem;
-  color: var(--color-text);
   text-align: center;
 }
 
+/* B / I keep their typographic glyphs; give them serif-independent weight */
 .fmt-btn {
-  width: 26px;
-  height: 26px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-muted);
   font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition);
+  font-weight: 700;
 }
 
-.fmt-btn.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
-.fmt-btn:hover:not(.active) { border-color: var(--color-accent); color: var(--color-accent); }
-
-.color-picker {
-  width: 28px;
-  height: 26px;
-  padding: 1px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: none;
-}
-
-.toolbar-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
-}
-
-.action-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-sm);
-  border: none;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity var(--transition);
-}
-
-.action-btn.cancel  { background: var(--color-border); color: var(--color-text); }
-.action-btn.confirm { background: var(--color-accent); color: #fff; }
-.action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.action-btn:hover:not(:disabled) { opacity: 0.8; }
-
-/* ── Placement hint ──────────────────────────────── */
 .placement-hint {
   position: absolute;
   top: 50%;
@@ -319,7 +233,9 @@ function confirm(): void {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
@@ -329,7 +245,7 @@ function confirm(): void {
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-lg);
   animation: hint-fade-in 0.18s ease;
 }
 
@@ -345,7 +261,6 @@ function confirm(): void {
   to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-/* ── Text box (wrapper + drag handle + textarea) ─── */
 .text-box {
   position: absolute;
   display: inline-flex;
@@ -367,9 +282,7 @@ function confirm(): void {
 }
 
 .drag-icon {
-  font-size: 0.75rem;
   color: var(--color-muted);
-  letter-spacing: 2px;
 }
 
 .text-input {

@@ -1,7 +1,5 @@
 <!--
-  ShapesOverlay.vue
   Draw shapes (rectangle, ellipse, line, arrow) on a canvas overlay.
-  Each drag commits a shape; Apply composites the overlay onto the image.
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -60,14 +58,12 @@ function drawShape(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: nu
     const angle   = Math.atan2(y2 - y1, x2 - x1)
     const headLen = Math.max(16, lineWidth.value * 5)
 
-    // Shaft — stop short of tip so it doesn't poke through the arrowhead
     const shaftEndX = x2 - (headLen * 0.6) * Math.cos(angle)
     const shaftEndY = y2 - (headLen * 0.6) * Math.sin(angle)
     ctx.moveTo(x1, y1)
     ctx.lineTo(shaftEndX, shaftEndY)
     ctx.stroke()
 
-    // Filled triangular arrowhead
     ctx.beginPath()
     ctx.moveTo(x2, y2)
     ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6))
@@ -119,7 +115,6 @@ function clearShapes(): void {
     class="shapes-overlay"
     :style="{ width: imgWidth + 'px', height: imgHeight + 'px' }"
   >
-    <!-- Drawing canvas -->
     <canvas
       ref="canvasRef"
       class="shapes-canvas"
@@ -140,8 +135,8 @@ function clearShapes(): void {
         <button
           v-for="s in (['rect', 'ellipse', 'line', 'arrow'] as const)"
           :key="s"
-          class="shape-btn"
-          :class="{ 'shape-btn--active': shapeType === s }"
+          class="ov-btn ov-btn--icon"
+          :class="{ active: shapeType === s }"
           :title="s.charAt(0).toUpperCase() + s.slice(1)"
           @click="shapeType = s"
         >
@@ -152,40 +147,40 @@ function clearShapes(): void {
         </button>
       </div>
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
       <!-- Stroke colour -->
-      <label class="ctrl-label">Stroke</label>
-      <input type="color" v-model="strokeColor" class="color-picker" title="Stroke color" />
+      <label class="ov-label">Stroke</label>
+      <input type="color" v-model="strokeColor" class="ov-swatch" title="Stroke color" />
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
       <!-- Fill -->
-      <label class="ctrl-label">
+      <label class="ov-label">
         <input type="checkbox" v-model="fillEnabled" class="fill-check" />
         Fill
       </label>
-      <input type="color" v-model="fillColor" class="color-picker" :disabled="!fillEnabled" title="Fill color" />
+      <input type="color" v-model="fillColor" class="ov-swatch" :disabled="!fillEnabled" title="Fill color" />
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
       <!-- Line width -->
-      <label class="ctrl-label">Width</label>
+      <label class="ov-label">Width</label>
       <input
         type="range"
         v-model.number="lineWidth"
         min="1" max="40" step="1"
-        class="range-input"
+        class="ov-range"
         title="Stroke width"
       />
-      <span class="ctrl-value">{{ lineWidth }}</span>
+      <span class="ov-value">{{ lineWidth }}</span>
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
       <!-- Actions -->
-      <button class="tool-btn" :disabled="!hasShapes" @click="clearShapes">⟳ Clear</button>
-      <button class="tool-btn" @click="emit('cancel')">✕</button>
-      <button class="tool-btn tool-btn--primary" :disabled="!hasShapes" @click="canvasRef && emit('apply', canvasRef)">Apply</button>
+      <button class="ov-btn" :disabled="!hasShapes" @click="clearShapes"><v-icon icon="mdi-restore" size="15" />Clear</button>
+      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')"><v-icon icon="mdi-close" size="16" /></button>
+      <button class="ov-btn ov-btn--primary" :disabled="!hasShapes" @click="canvasRef && emit('apply', canvasRef)"><v-icon icon="mdi-check" size="15" />Apply</button>
 
     </div>
     </Teleport>
@@ -208,7 +203,6 @@ function clearShapes(): void {
   display: block;
 }
 
-/* ── Floating toolbar ── */
 .shapes-toolbar {
   position: absolute;
   top: 12px;
@@ -217,59 +211,20 @@ function clearShapes(): void {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
   z-index: 200;
 }
 
-/* Shape type selector */
 .shape-type-group {
   display: flex;
   gap: 2px;
-}
-
-.shape-btn {
-  width: 28px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-muted);
-  cursor: pointer;
-  transition: all var(--transition);
-  padding: 0;
-  flex-shrink: 0;
-}
-.shape-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
-.shape-btn--active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: #fff;
-}
-
-.sep {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
-  flex-shrink: 0;
-}
-
-.ctrl-label {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .fill-check {
@@ -278,53 +233,6 @@ function clearShapes(): void {
   accent-color: var(--color-accent);
   cursor: pointer;
 }
-
-.color-picker {
-  width: 28px;
-  height: 26px;
-  padding: 1px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: none;
-  flex-shrink: 0;
-}
-.color-picker:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.range-input {
-  width: 70px;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
-
-.ctrl-value {
-  font-size: 0.75rem;
-  color: var(--color-text);
-  min-width: 22px;
-  text-align: right;
-}
-
-.tool-btn {
-  height: 26px;
-  padding: 0 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  flex-shrink: 0;
-}
-.tool-btn:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
-.tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.tool-btn--primary {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: #fff;
-}
-.tool-btn--primary:hover:not(:disabled) { opacity: 0.85; }
 
 @media (max-width: 639px) {
   .shapes-toolbar {

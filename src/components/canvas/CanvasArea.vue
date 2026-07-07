@@ -1,5 +1,4 @@
 <!--
-  CanvasArea.vue
   Central workspace. Shows CanvasDropZone when no image is loaded, the image
   itself once one is available, and CanvasStatusBar at the bottom.
 -->
@@ -37,11 +36,9 @@ const displayH     = ref(0)
 let resizeObs: ResizeObserver | null = null
 
 // Auto-calculate zoom-to-fit only on initial image load or when image dimensions
-// change (e.g. after crop). Skips the reset for brush/eraser/shapes/text/fill
-// operations where dimensions stay the same, so the user's current zoom is preserved.
 watch(() => editor.image, async (img, prevImg) => {
   if (!img) return
-  // If dimensions are unchanged this is a paint/filter operation — keep current zoom.
+  // If dimensions are unchanged 
   if (prevImg && img.width === prevImg.width && img.height === prevImg.height) return
   await nextTick()
   if (!containerRef.value) return
@@ -51,7 +48,7 @@ watch(() => editor.image, async (img, prevImg) => {
   editor.setZoom(Math.round(fitScale * 100))
 })
 
-// Drives the explicit pixel width set on <img>. Height follows via auto.
+// Drives the explicit pixel width set on <img>
 const imgPixelWidth = computed(() =>
   editor.image ? Math.round(editor.image.width * editor.zoom / 100) : 0
 )
@@ -75,9 +72,6 @@ watch([isCropping, isTexting, isSelecting, isBrushing, isErasing, isFilling, isS
 })
 
 // --Touch gestures: pinch-to-zoom + two-finger pan -----------------------
-// Native touch events are used (not pointer events) because the drawing overlays
-// pointer-capture a single touch; touch events still report every active finger,
-// so a 2-finger gesture is detectable regardless of which tool is active.
 const isGesturing = ref(false)
 let pinchStartDist = 0
 let pinchStartZoom = 100
@@ -97,7 +91,7 @@ function twoTouchMetrics(t: TouchList): { dist: number; cx: number; cy: number }
 function onTouchStart(e: TouchEvent): void {
   if (!editor.hasImage || e.touches.length !== 2) return
   const m = twoTouchMetrics(e.touches)
-  isGesturing.value = true   // disables overlay pointer-events so no stray drawing
+  isGesturing.value = true
   pinchStartDist = m.dist
   pinchStartZoom = editor.zoom
   lastCx = m.cx
@@ -106,7 +100,7 @@ function onTouchStart(e: TouchEvent): void {
 
 function onTouchMove(e: TouchEvent): void {
   if (!isGesturing.value || e.touches.length !== 2) return
-  e.preventDefault()   // take over from native page zoom/scroll
+  e.preventDefault() 
   const m = twoTouchMetrics(e.touches)
   if (pinchStartDist > 0) editor.setZoom(pinchStartZoom * (m.dist / pinchStartDist))
   const el = containerRef.value
@@ -125,7 +119,6 @@ function onTouchEnd(e: TouchEvent): void {
 onMounted(() => {
   const el = containerRef.value
   if (!el) return
-  // passive:false so preventDefault works during a 2-finger gesture
   el.addEventListener('touchstart',  onTouchStart, { passive: false })
   el.addEventListener('touchmove',   onTouchMove,  { passive: false })
   el.addEventListener('touchend',    onTouchEnd)
@@ -160,8 +153,7 @@ function handleSelectionClear(rect: CropRect): void {
 
 
 // Shared compositing helper. Draws the overlay canvas synchronously onto the
-// rendered image. Fully synchronous — toDataURL is used instead of toBlob so
-// there is no async callback that can silently fail.
+// rendered image.
 function compositeOverlay(
   overlayCanvas: HTMLCanvasElement,
   mode: GlobalCompositeOperation,
@@ -183,7 +175,6 @@ function compositeOverlay(
   ctx.globalCompositeOperation = mode
   ctx.drawImage(overlayCanvas, 0, 0, output.width, output.height)
   ctx.globalCompositeOperation = 'source-over'
-  // toDataURL is synchronous — no async callback, no silent null-blob failure.
   const dataUrl = output.toDataURL('image/png')
   save(dataUrl, output.width, output.height)
 }
@@ -222,8 +213,7 @@ function handleFill(nx: number, ny: number, color: string, tolerance: number): v
   editor.saveFillResult(dataUrl, rendered.width, rendered.height)
 }
 
-// Resolved auto-contrast color; computed before TextOverlay mounts so the
-// initial color is correct without a visible flicker.
+// Resolved auto-contrast color.
 const autoTextColor  = ref<'#ffffff' | '#000000'>('#ffffff')
 const textColorReady = ref(false)
 
@@ -237,9 +227,9 @@ watch(isTexting, async (active) => {
   }
 })
 
-// Mouse-wheel zooms the image; each notch = 10 pp, clamped in the store.
+// Mouse-wheel zooms the image
 function onWheel(e: WheelEvent): void {
-  if (!editor.hasImage) return
+  if (!editor.hasImage || editor.zoomLocked) return
   e.preventDefault()
   editor.setZoom(editor.zoom + (e.deltaY < 0 ? 10 : -10))
 }
@@ -263,11 +253,6 @@ const sharpenKernel = computed<string>(() => {
 <template>
   <main class="canvas-area" id="canvas-area-host">
 
-    <!--
-      Hidden SVG that declares the reactive sharpen filter.
-      CSS filter: url(#image-sharpen) references this by ID.
-      The kernel is updated reactively so the preview responds to the slider in real time.
-    -->
     <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;">
       <defs>
         <filter id="image-sharpen" x="0%" y="0%" width="100%" height="100%"
@@ -282,17 +267,13 @@ const sharpenKernel = computed<string>(() => {
       ref="containerRef"
       class="canvas-container"
       :class="{ 'cursor-zoom-in': isZooming, 'is-gesturing': isGesturing }"
-      @wheel.prevent="onWheel"
+      @wheel="onWheel"
       @click="onContainerClick"
     >
       <div v-if="!editor.hasImage" class="image-center">
         <CanvasDropZone />
       </div>
 
-      <!--
-        .image-center stretches to fill the scrollable container and centers the
-        image when it is smaller than the viewport; when larger the container scrolls.
-      -->
       <div v-else class="image-center">
         <div class="image-wrapper">
           <img
@@ -312,7 +293,7 @@ const sharpenKernel = computed<string>(() => {
             :img-width="displayW"
             :img-height="displayH"
             @apply="handleCropApply"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <TextOverlay
             v-if="isTexting && displayW > 0 && textColorReady"
@@ -320,7 +301,7 @@ const sharpenKernel = computed<string>(() => {
             :img-height="displayH"
             :default-color="autoTextColor"
             @apply="handleTextApply"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <SelectionOverlay
             v-if="isSelecting && displayW > 0"
@@ -328,44 +309,40 @@ const sharpenKernel = computed<string>(() => {
             :img-height="displayH"
             @crop="handleSelectionCrop"
             @clear="handleSelectionClear"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <BrushOverlay
             v-if="isBrushing && displayW > 0"
             :img-width="displayW"
             :img-height="displayH"
             @apply="handleBrushApply"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <EraserOverlay
             v-if="isErasing && displayW > 0"
             :img-width="displayW"
             :img-height="displayH"
             @apply="handleEraserApply"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <FillOverlay
             v-if="isFilling && displayW > 0"
             :img-width="displayW"
             :img-height="displayH"
             @fill="handleFill"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
           <ShapesOverlay
             v-if="isShaping && displayW > 0"
             :img-width="displayW"
             :img-height="displayH"
             @apply="handleShapesApply"
-            @cancel="editor.selectTool('select')"
+            @cancel="editor.selectTool(null)"
           />
         </div>
       </div>
     </div>
 
-    <!--
-      Optional chaining on editor.image because image is null before any file is
-      loaded; CanvasStatusBar accepts null props and renders fallback text.
-    -->
     <CanvasStatusBar
       :image-width="editor.image?.width"
       :image-height="editor.image?.height"
@@ -389,12 +366,14 @@ const sharpenKernel = computed<string>(() => {
   flex: 1;
   overflow: auto;
   padding: 20px;
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-text) 8%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
 }
 
 .cursor-zoom-in { cursor: zoom-in; }
-
-/* While a 2-finger gesture runs, the browser must not also pan/zoom the page,
-   and overlays must not receive pointer input (avoids stray selections/strokes). */
 .canvas-container.is-gesturing { touch-action: none; }
 .is-gesturing .image-wrapper > :not(.canvas-image) { pointer-events: none; }
 
@@ -409,9 +388,8 @@ const sharpenKernel = computed<string>(() => {
 
 .canvas-image {
   display: block;
-  /* Width is set explicitly via inline style; height follows aspect ratio */
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-lg);
 }
 
 .image-wrapper {

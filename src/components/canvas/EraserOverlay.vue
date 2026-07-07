@@ -1,5 +1,4 @@
 <!--
-  EraserOverlay.vue
   Freehand eraser overlay. Draws opaque white strokes on a transparent canvas.
   On apply, CanvasArea uses destination-out compositing so the white pixels
   punch transparent holes in the rendered image.
@@ -13,13 +12,13 @@ const emit  = defineEmits<{
   cancel: []
 }>()
 
-// ── Tool state ─────────────────────────────────────────────────────────────
+// Tool state 
 
 const canvasRef  = ref<HTMLCanvasElement>()
 const eraserSize = ref(20)
 const hasStrokes = ref(false)
 
-// ── Drawing ────────────────────────────────────────────────────────────────
+// Drawing
 
 let isDrawing = false
 let lastX     = 0
@@ -71,8 +70,6 @@ function onPointerUp(): void {
   isDrawing = false
 }
 
-// ── Actions ────────────────────────────────────────────────────────────────
-
 function clearStrokes(): void {
   getCtx().clearRect(0, 0, props.imgWidth, props.imgHeight)
   hasStrokes.value = false
@@ -88,7 +85,6 @@ function applyStrokes(): void {
     class="eraser-overlay"
     :style="{ width: imgWidth + 'px', height: imgHeight + 'px' }"
   >
-    <!-- Drawing canvas -->
     <canvas
       ref="canvasRef"
       class="eraser-canvas"
@@ -100,32 +96,28 @@ function applyStrokes(): void {
       @pointercancel="onPointerUp"
     />
 
-    <!-- Floating toolbar -->
     <Teleport to="#canvas-area-host">
     <div class="eraser-toolbar" @pointerdown.stop @click.stop>
 
-      <!-- Eraser icon indicator -->
-      <span class="eraser-icon" aria-hidden="true">◻</span>
+      <v-icon class="tool-indicator" icon="mdi-eraser" size="17" aria-hidden="true" />
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
-      <!-- Size -->
-      <label class="ctrl-label">Size</label>
+      <label class="ov-label">Size</label>
       <input
         type="range"
         v-model.number="eraserSize"
         min="4" max="120" step="2"
-        class="range-input"
+        class="ov-range"
         title="Eraser size"
       />
-      <span class="ctrl-value">{{ eraserSize }}</span>
+      <span class="ov-value">{{ eraserSize }}</span>
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
-      <!-- Actions -->
-      <button class="tool-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes">⟳ Clear</button>
-      <button class="tool-btn" @click="emit('cancel')">✕</button>
-      <button class="tool-btn tool-btn--primary" :disabled="!hasStrokes" @click="applyStrokes">Apply</button>
+      <button class="ov-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes"><v-icon icon="mdi-restore" size="15" />Clear</button>
+      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')"><v-icon icon="mdi-close" size="16" /></button>
+      <button class="ov-btn ov-btn--primary" :disabled="!hasStrokes" @click="applyStrokes"><v-icon icon="mdi-check" size="15" />Apply</button>
 
     </div>
     </Teleport>
@@ -148,7 +140,7 @@ function applyStrokes(): void {
   display: block;
 }
 
-/* ── Floating toolbar ── */
+/* Floating toolbar */
 .eraser-toolbar {
   position: absolute;
   top: 12px;
@@ -157,70 +149,21 @@ function applyStrokes(): void {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
   z-index: 200;
 }
 
-.eraser-icon {
-  font-size: 1.1rem;
+.tool-indicator {
   color: var(--color-muted);
   flex-shrink: 0;
 }
-
-.sep {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
-  flex-shrink: 0;
-}
-
-.ctrl-label {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-}
-
-.range-input {
-  width: 80px;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
-
-.ctrl-value {
-  font-size: 0.75rem;
-  color: var(--color-text);
-  min-width: 28px;
-  text-align: right;
-}
-
-.tool-btn {
-  height: 26px;
-  padding: 0 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  flex-shrink: 0;
-}
-.tool-btn:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
-.tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.tool-btn--primary {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: #fff;
-}
-.tool-btn--primary:hover:not(:disabled) { opacity: 0.85; }
 
 @media (max-width: 639px) {
   .eraser-toolbar {

@@ -1,8 +1,5 @@
 <!--
-  FillOverlay.vue
   Paint-bucket fill tool. Click anywhere to flood-fill that colour region.
-  Emits 'fill' with normalised click coords + settings on every click.
-  The tool stays active so the user can fill multiple regions; 'cancel' exits.
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -30,35 +27,31 @@ function onClick(e: MouseEvent): void {
     :style="{ width: imgWidth + 'px', height: imgHeight + 'px' }"
     @click="onClick"
   >
-    <!-- Floating toolbar -->
     <Teleport to="#canvas-area-host">
     <div class="fill-toolbar" @pointerdown.stop @click.stop>
 
-      <!-- Bucket icon -->
-      <span class="fill-icon" aria-hidden="true">🪣</span>
+      <v-icon class="tool-indicator" icon="mdi-format-color-fill" size="17" aria-hidden="true" />
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
-      <!-- Fill colour -->
-      <label class="ctrl-label">Color</label>
-      <input type="color" v-model="color" class="color-picker" title="Fill color" />
+      <label class="ov-label">Color</label>
+      <input type="color" v-model="color" class="ov-swatch" title="Fill color" />
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
-      <!-- Tolerance -->
-      <label class="ctrl-label">Tolerance</label>
+      <label class="ov-label">Tolerance</label>
       <input
         type="range"
         v-model.number="tolerance"
         min="0" max="100" step="1"
-        class="range-input"
+        class="ov-range"
         title="Colour tolerance"
       />
-      <span class="ctrl-value">{{ tolerance }}</span>
+      <span class="ov-value">{{ tolerance }}</span>
 
-      <div class="sep" />
+      <div class="ov-sep" />
 
-      <button class="tool-btn" @click="emit('cancel')">✕ Done</button>
+      <button class="ov-btn ov-btn--primary" @click="emit('cancel')"><v-icon icon="mdi-check" size="15" />Done</button>
 
     </div>
     </Teleport>
@@ -75,7 +68,6 @@ function onClick(e: MouseEvent): void {
   touch-action: none;
 }
 
-/* ── Floating toolbar ── */
 .fill-toolbar {
   position: absolute;
   top: 12px;
@@ -84,72 +76,21 @@ function onClick(e: MouseEvent): void {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
   z-index: 200;
 }
 
-.fill-icon {
-  font-size: 1.1rem;
+.tool-indicator {
+  color: var(--color-accent);
   flex-shrink: 0;
 }
-
-.sep {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
-  flex-shrink: 0;
-}
-
-.ctrl-label {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-}
-
-.color-picker {
-  width: 28px;
-  height: 26px;
-  padding: 1px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: none;
-  flex-shrink: 0;
-}
-
-.range-input {
-  width: 80px;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
-
-.ctrl-value {
-  font-size: 0.75rem;
-  color: var(--color-text);
-  min-width: 26px;
-  text-align: right;
-}
-
-.tool-btn {
-  height: 26px;
-  padding: 0 10px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  flex-shrink: 0;
-}
-.tool-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
 @media (max-width: 639px) {
   .fill-toolbar {

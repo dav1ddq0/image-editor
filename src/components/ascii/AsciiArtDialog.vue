@@ -1,10 +1,9 @@
 <!--
-  AsciiArtDialog.vue
   Modal that displays the ASCII art generated from the current image.
-  Follows the same pattern as QrScanDialog: Teleport + v-model:visible + state machine.
 -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useDisplay, useTheme } from 'vuetify'
 import type { ColorChar } from '@/utils/asciiConverter'
 
 const props = defineProps<{
@@ -21,17 +20,25 @@ const emit = defineEmits<{
   'regenerate':     [cols: number, moreLevels: boolean, blockChars: boolean]
 }>()
 
+const { smAndDown } = useDisplay()
+const theme = useTheme()
+
+const dialog = computed({
+  get: () => props.visible,
+  set: (value: boolean) => emit('update:visible', value),
+})
+
 const localCols       = ref(props.cols)
 const localMoreLevels = ref(props.moreLevels)
 const localFontSize   = ref(5)
 const colorMode       = ref(false)
 const blockChars      = ref(false)
+const copied          = ref(false)
 
 watch(() => props.cols,       (v) => { localCols.value       = v })
 watch(() => props.moreLevels, (v) => { localMoreLevels.value = v })
 
 // Pre-render color HTML once when colorLines changes instead of tracking
-// thousands of reactive spans. Source is internal data — v-html is safe here.
 const colorHtml = computed<string>(() => {
   if (!props.colorLines.length) return ''
   return props.colorLines
@@ -60,8 +67,6 @@ function buildHtmlPayload(): string {
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
-
-const copied = ref(false)
 
 async function copyRich(): Promise<boolean> {
   try {
@@ -101,177 +106,106 @@ function close(): void {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="ascii-backdrop" @click.self="close">
-      <div class="ascii-dialog" role="dialog" aria-modal="true" aria-label="ASCII Art Generator">
+  <v-dialog v-model="dialog" max-width="640" :fullscreen="smAndDown" :theme="theme.name.value" scrollable aria-label="ASCII Art Generator">
+    <v-card class="ascii-card">
 
-        <!-- Header -->
-        <div class="ascii-header">
-          <span class="ascii-title">ASCII Art</span>
-          <button class="ascii-close" @click="close" aria-label="Close">✕</button>
-        </div>
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span>ASCII Art</span>
+        <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
+      </v-card-title>
 
-        <!-- Generating state -->
-        <div v-if="state === 'generating'" class="ascii-body ascii-center">
-          <div class="ascii-spinner" aria-label="Generating…" />
-          <p class="ascii-status-text">Generating ASCII art…</p>
-        </div>
+      <v-card-text v-if="state === 'generating'" class="state-center py-10">
+        <v-progress-circular color="primary" indeterminate size="44" width="3" />
+        <p class="status-text">Generating ASCII art…</p>
+      </v-card-text>
 
-        <!-- Done state -->
-        <div v-else class="ascii-body">
+      <v-card-text v-else class="d-flex flex-column ga-4 py-4">
+        <pre
+          v-if="!colorMode"
+          class="ascii-output"
+          :style="{ fontSize: localFontSize + 'px', lineHeight: '1.1' }"
+          aria-label="ASCII art output"
+        >{{ text }}</pre>
 
-          <!-- B&W output -->
-          <pre
-            v-if="!colorMode"
-            class="ascii-output"
-            :style="{ fontSize: localFontSize + 'px', lineHeight: '1.1' }"
-            aria-label="ASCII art output"
-          >{{ text }}</pre>
+        <pre
+          v-else
+          class="ascii-output"
+          :style="{ fontSize: localFontSize + 'px', lineHeight: '1.1' }"
+          aria-label="ASCII art color output"
+          v-html="colorHtml"
+        />
 
-          <!-- Color output — HTML string injected once via v-html for performance -->
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <pre
-            v-else
-            class="ascii-output"
-            :style="{ fontSize: localFontSize + 'px', lineHeight: '1.1' }"
-            aria-label="ASCII art color output"
-            v-html="colorHtml"
-          />
-
-          <div class="ascii-controls">
-            <div class="control-row">
-              <label class="control-label" for="ascii-font-size">
-                Font size <span class="control-value">{{ localFontSize }}px</span>
-              </label>
-              <input
-                id="ascii-font-size"
-                v-model.number="localFontSize"
-                type="range"
-                min="3"
-                max="14"
-                step="1"
-                class="ascii-slider"
-              />
-            </div>
-
-            <div class="control-row">
-              <label class="control-label" for="ascii-cols">
-                Columns <span class="control-value">{{ localCols }}</span>
-              </label>
-              <input
-                id="ascii-cols"
-                v-model.number="localCols"
-                type="range"
-                min="40"
-                max="240"
-                step="5"
-                class="ascii-slider"
-              />
-            </div>
-
-            <div class="control-row toggles-row">
-              <label class="control-label toggle-label">
-                <input v-model="localMoreLevels" type="checkbox" class="ascii-checkbox" :disabled="blockChars" />
-                70-level ramp
-              </label>
-              <label class="control-label toggle-label">
-                <input v-model="blockChars" type="checkbox" class="ascii-checkbox" />
-                Block chars (█▓▒░)
-              </label>
-              <label class="control-label toggle-label">
-                <input v-model="colorMode" type="checkbox" class="ascii-checkbox" />
-                Color
-              </label>
-            </div>
+        <div class="ascii-controls">
+          <div class="control-row">
+            <span class="control-label">Font size <span class="control-value">{{ localFontSize }}px</span></span>
+            <v-slider
+              v-model="localFontSize"
+              :min="3" :max="14" :step="1"
+              color="primary" density="compact" hide-details thumb-size="14"
+            />
           </div>
 
-          <div class="ascii-actions">
-            <button class="btn btn-secondary" @click="regenerate">Regenerate</button>
-            <button class="btn btn-primary" @click="copyToClipboard">
-              {{ copied ? '✓ Copied!' : 'Copy to clipboard' }}
-            </button>
+          <div class="control-row">
+            <span class="control-label">Columns <span class="control-value">{{ localCols }}</span></span>
+            <v-slider
+              v-model="localCols"
+              :min="40" :max="240" :step="5"
+              color="primary" density="compact" hide-details thumb-size="14"
+            />
+          </div>
+
+          <div class="toggles-row">
+            <v-checkbox
+              v-model="localMoreLevels"
+              :disabled="blockChars"
+              label="70-level ramp"
+              color="primary" density="compact" hide-details
+            />
+            <v-checkbox
+              v-model="blockChars"
+              label="Block chars (█▓▒░)"
+              color="primary" density="compact" hide-details
+            />
+            <v-checkbox
+              v-model="colorMode"
+              label="Color"
+              color="primary" density="compact" hide-details
+            />
           </div>
         </div>
+      </v-card-text>
 
-      </div>
-    </div>
-  </Teleport>
+      <template v-if="state === 'done'">
+        <v-card-actions class="px-4 py-3">
+          <v-spacer />
+          <v-btn variant="tonal" prepend-icon="mdi-refresh" @click="regenerate">Regenerate</v-btn>
+          <v-btn
+            color="primary" variant="flat"
+            :prepend-icon="copied ? 'mdi-check' : 'mdi-content-copy'"
+            @click="copyToClipboard"
+          >{{ copied ? 'Copied!' : 'Copy to clipboard' }}</v-btn>
+        </v-card-actions>
+      </template>
+
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
-.ascii-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-}
-
-.ascii-dialog {
-  width: 620px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 32px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+.state-center {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Header ── */
-.ascii-header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
-
-.ascii-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.ascii-close {
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition);
-}
-@media (hover: hover) and (pointer: fine) {
-  .ascii-close:hover { color: var(--color-text); }
-}
-
-/* ── Body ── */
-.ascii-body {
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.ascii-center {
-  align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 40px 18px;
+  gap: 4px;
 }
 
-/* ── ASCII output ── */
+.status-text {
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  margin: 8px 0 0;
+}
+
 .ascii-output {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -287,21 +221,16 @@ function close(): void {
   scrollbar-color: var(--color-border) var(--color-bg);
 }
 
-/* ── Controls ── */
 .ascii-controls {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 .control-row {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.toggles-row {
-  gap: 20px;
 }
 
 .control-label {
@@ -316,69 +245,23 @@ function close(): void {
   font-weight: 600;
 }
 
-.ascii-slider {
-  flex: 1;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
-
-.toggle-label {
+.toggles-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  min-width: unset;
+  flex-wrap: wrap;
+  gap: 4px 20px;
 }
 
-.ascii-checkbox {
-  accent-color: var(--color-accent);
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
+.toggles-row :deep(.v-selection-control) {
+  flex: 0 0 auto;
 }
 
-/* ── Actions ── */
-.ascii-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
+.toggles-row :deep(.v-label) {
+  font-size: 0.82rem;
+  opacity: 1;
 }
 
-/* ── Spinner ── */
-.ascii-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.ascii-status-text {
-  font-size: 0.88rem;
-  color: var(--color-muted);
-  margin: 8px 0 0;
-}
-
-/* ── Mobile ── */
 @media (max-width: 639px) {
-  .ascii-dialog {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 100%;
-    max-height: 90dvh;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .ascii-output { max-height: 240px; }
-
-  .toggles-row { flex-wrap: wrap; gap: 10px; }
+  .ascii-output { max-height: 45vh; }
+  .control-label { min-width: 96px; }
 }
 </style>

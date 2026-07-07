@@ -1,5 +1,4 @@
 <!--
-  CropOverlay.vue
   Full-image overlay for the crop tool. Manages the crop bounding box,
   8 draggable handles, aspect ratio presets, lock toggle, and apply/cancel.
 -->
@@ -12,7 +11,7 @@ const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit  = defineEmits<{ apply: [rect: CropRect]; cancel: [] }>()
 const editor = useEditorStore()
 
-// ── Crop box (pixels relative to displayed image) ──────────────────────────────
+// Crop box (pixels relative to displayed image)
 interface Box { left: number; top: number; right: number; bottom: number }
 
 const box = reactive<Box>({ left: 0, top: 0, right: props.imgWidth, bottom: props.imgHeight })
@@ -22,7 +21,7 @@ watch([() => props.imgWidth, () => props.imgHeight], () => {
   box.right = props.imgWidth; box.bottom = props.imgHeight
 }, { immediate: true })
 
-// ── Aspect ratio ───────────────────────────────────────────────────────────────
+// Aspect ratio
 interface PresetOption { id: AspectPreset; label: string; ratio: number | null }
 const presetOptions: PresetOption[] = [
   { id: 'free', label: 'Free',  ratio: null },
@@ -55,7 +54,7 @@ function setPreset(id: AspectPreset) {
   box.bottom = Math.min(props.imgHeight, box.top  + nh)
 }
 
-// ── Drag handles ───────────────────────────────────────────────────────────────
+// Drag handles 
 type HandleId = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'move'
 const MIN = 30
 
@@ -139,7 +138,6 @@ function onPointerMove(e: PointerEvent) {
 
 function stopDrag() { drag = null }
 
-// ── Computed styles ────────────────────────────────────────────────────────────
 const W = computed(() => props.imgWidth)
 const H = computed(() => props.imgHeight)
 
@@ -175,24 +173,19 @@ function applyHandler() {
     @pointerup="stopDrag"
     @pointercancel="stopDrag"
   >
-    <!-- Dark shading outside the crop area -->
     <div class="shade" :style="shadeStyles.top" />
     <div class="shade" :style="shadeStyles.bottom" />
     <div class="shade" :style="shadeStyles.left" />
     <div class="shade" :style="shadeStyles.right" />
 
-    <!-- Crop box -->
     <div class="crop-box" :style="cropBoxStyle">
-      <!-- Rule-of-thirds grid lines -->
       <div class="grid-h" style="top: 33.33%" />
       <div class="grid-h" style="top: 66.66%" />
       <div class="grid-v" style="left: 33.33%" />
       <div class="grid-v" style="left: 66.66%" />
 
-      <!-- Move zone (drag the whole box) -->
       <div class="move-zone" @pointerdown="startMove" />
 
-      <!-- 8 resize handles -->
       <div
         v-for="h in handles"
         :key="h.id"
@@ -202,35 +195,34 @@ function applyHandler() {
       />
     </div>
 
-    <!-- Controls bar -->
     <Teleport to="#canvas-area-host">
     <div class="crop-controls">
-      <!-- Aspect ratio presets -->
       <div class="preset-group">
         <button
           v-for="p in presetOptions"
           :key="p.id"
-          class="preset-btn"
+          class="ov-btn preset-btn"
           :class="{ active: editor.cropPreset === p.id }"
           @click="setPreset(p.id)"
         >{{ p.label }}</button>
       </div>
 
-      <!-- Lock toggle -->
       <button
-        class="lock-btn"
+        class="ov-btn ov-btn--icon"
         :class="{ active: editor.cropLocked }"
         :title="editor.cropLocked ? 'Unlock aspect ratio' : 'Lock current aspect ratio'"
         @click="editor.toggleCropLock()"
       >
-        {{ editor.cropLocked ? '🔒' : '🔓' }}
+        <v-icon :icon="editor.cropLocked ? 'mdi-lock' : 'mdi-lock-open-variant-outline'" size="15" />
       </button>
 
       <div class="spacer" />
 
-      <!-- Cancel / Apply -->
-      <button class="btn btn-secondary btn-small" @click="emit('cancel')">Cancel</button>
-      <button class="btn btn-primary  btn-small" @click="applyHandler">Apply</button>
+      <button class="ov-btn" @click="emit('cancel')">Cancel</button>
+      <button class="ov-btn ov-btn--primary" @click="applyHandler">
+        <v-icon icon="mdi-check" size="15" />
+        Apply
+      </button>
     </div>
     </Teleport>
   </div>
@@ -251,11 +243,10 @@ function applyHandler() {
   pointer-events: none;
 }
 
-/* Crop box */
 .crop-box {
   position: absolute;
   border: 1.5px solid #fff;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0); /* needed so shade divs don't overlap */
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0);
   cursor: default;
   box-sizing: border-box;
 }
@@ -269,14 +260,12 @@ function applyHandler() {
 .grid-h { left: 0; right: 0; height: 1px; }
 .grid-v { top: 0; bottom: 0; width: 1px; }
 
-/* Move zone (fills the box interior, below handles) */
 .move-zone {
   position: absolute;
   inset: 8px;
   cursor: move;
 }
 
-/* Resize handles */
 .handle {
   position: absolute;
   width: 10px;
@@ -287,58 +276,37 @@ function applyHandler() {
   z-index: 2;
 }
 
-/* Controls bar — pinned at top of canvas-area via Teleport */
 .crop-controls {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
   height: 40px;
-  background: rgba(22, 33, 62, 0.92);
+  background: var(--color-surface-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   padding: 0 10px;
   gap: 6px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
   white-space: nowrap;
   z-index: 200;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
 }
 
 .preset-group {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .preset-btn {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  padding: 3px 7px;
-  cursor: pointer;
-  transition: all var(--transition);
+  padding: 0 10px;
+  font-size: 0.75rem;
 }
 
-.preset-btn:hover  { border-color: var(--color-muted); color: var(--color-text); }
-.preset-btn.active { border-color: var(--color-accent); color: var(--color-accent); }
-
-.lock-btn {
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 3px 7px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: border-color var(--transition);
-}
-.lock-btn:hover  { border-color: var(--color-muted); }
-.lock-btn.active { border-color: var(--color-accent); }
-
-.spacer { flex: 1; }
+.spacer { flex: 1; min-width: 8px; }
 
 @media (max-width: 639px) {
   .crop-controls {

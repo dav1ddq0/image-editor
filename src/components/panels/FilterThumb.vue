@@ -1,12 +1,9 @@
 <!--
-  FilterThumb.vue
-  Clickable filter preset tile. Applies an accent border when active and emits
-  'select' upward so FiltersPanel stays decoupled from the store.
+  Clickable filter preset tile
 -->
 <script setup lang="ts">
 import type { FilterId } from '@/types/editor'
 
-// `id` doubles as a CSS class name so scoped styles can target each preset individually
 withDefaults(defineProps<{
   id:        FilterId
   label:     string
@@ -33,7 +30,7 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
 <style scoped>
 .filter-thumb {
   aspect-ratio: 1;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 2px solid var(--color-border);
   display: flex;
@@ -42,12 +39,15 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   font-size: 0.7rem;
   color: var(--color-subtle);
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  transition: border-color var(--transition), color var(--transition),
+              transform var(--transition), box-shadow var(--transition);
 }
 
 .filter-thumb.active {
   border-color: var(--color-accent);
   color: var(--color-text);
+  font-weight: 600;
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .filter-thumb:disabled {
@@ -59,10 +59,16 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   .filter-thumb:hover:not(:disabled) {
     border-color: var(--color-accent);
     color: var(--color-text);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .filter-thumb.active:hover:not(:disabled) {
+    box-shadow: 0 0 0 3px var(--color-accent-soft), var(--shadow-sm);
   }
 }
 
-/* ── Filter preview styles ──────────────────────────────────────────────────── */
+/* Filter preview styles */
 
 .filter-thumb.sepia     { filter: sepia(0.8);  background: #3d2b1f; }
 .filter-thumb.grayscale { filter: grayscale(1); background: #2a2a2a; }

@@ -1,5 +1,4 @@
 <!--
-  TransformPanel.vue
   Right-panel section with rotate and flip action buttons.
 -->
 <script setup lang="ts">
@@ -14,29 +13,41 @@ const editor = useEditorStore()
     <h3 class="panel-title">Transform</h3>
 
     <div class="transform-actions">
-      <button
-        class="btn btn-small btn-secondary"
+      <v-btn
+        class="transform-btn"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-rotate-left"
         :disabled="!editor.hasImage"
         @click="editor.rotateLeft()"
-      >Rotate L</button>
+      >Rotate L</v-btn>
 
-      <button
-        class="btn btn-small btn-secondary"
+      <v-btn
+        class="transform-btn"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-rotate-right"
         :disabled="!editor.hasImage"
         @click="editor.rotateRight()"
-      >Rotate R</button>
+      >Rotate R</v-btn>
 
-      <button
-        class="btn btn-small btn-secondary"
+      <v-btn
+        class="transform-btn"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-flip-horizontal"
         :disabled="!editor.hasImage"
         @click="editor.flipHorizontal()"
-      >Flip H</button>
+      >Flip H</v-btn>
 
-      <button
-        class="btn btn-small btn-secondary"
+      <v-btn
+        class="transform-btn"
+        variant="tonal"
+        size="small"
+        prepend-icon="mdi-flip-vertical"
         :disabled="!editor.hasImage"
         @click="editor.flipVertical()"
-      >Flip V</button>
+      >Flip V</v-btn>
     </div>
 
   </section>
@@ -47,5 +58,10 @@ const editor = useEditorStore()
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+.transform-btn {
+  text-transform: none;
+  letter-spacing: 0.01em;
 }
 </style>
