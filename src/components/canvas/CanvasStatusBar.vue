@@ -1,5 +1,6 @@
 <!--
-  Footer bar: file name on the left, zoom controls centred, dimensions on the right.
+  Floating canvas info layer. The file name,zoom controls and resolution now 
+  float as frosted-glass chips over the bottomof the canvas 
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
@@ -31,67 +32,91 @@ function stepZoomOut(): void {
 </script>
 
 <template>
-  <footer class="statusbar">
 
-    <span class="filename">{{ imageName ?? 'No image loaded' }}</span>
+  <div
+    v-if="editor.hasImage"
+    class="floating-info"
+    :class="{ 'is-dimmed': editor.zoomLocked }"
+  >
+    <span class="chip chip-name">{{ imageName ?? 'Untitled' }}</span>
 
-    <div v-if="!editor.zoomLocked" class="zoom-controls">
-      <button class="zoom-btn" title="Zoom out" :disabled="!editor.hasImage || editor.zoom <= 10" @click="stepZoomOut">−</button>
-      <button class="zoom-value" title="Reset zoom to 100%" :disabled="!editor.hasImage" @click="editor.zoomReset">{{ editor.zoom }}%</button>
-      <button class="zoom-btn" title="Zoom in"  :disabled="!editor.hasImage || editor.zoom >= 500" @click="stepZoomIn">+</button>
+
+    <div v-if="!editor.zoomLocked" class="chip zoom-controls">
+      <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10" @click="stepZoomOut">−</button>
+      <button class="zoom-value" title="Reset zoom to 100%" @click="editor.zoomReset">{{ editor.zoom }}%</button>
+      <button class="zoom-btn" title="Zoom in" :disabled="editor.zoom >= 500" @click="stepZoomIn">+</button>
     </div>
 
-    <span class="dimensions">
-      <template v-if="imageWidth && imageHeight">W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px</template>
-      <template v-else>W: — &nbsp; H: —</template>
+    <span v-if="imageWidth && imageHeight" class="chip chip-dims">
+      W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px
     </span>
-
-  </footer>
+  </div>
 </template>
 
 <style scoped>
-.statusbar {
-  height: 32px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+.floating-info {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 0 16px;
+  align-items: end;
   gap: 8px;
-  font-size: 0.78rem;
-  color: var(--color-subtle);
-  flex-shrink: 0;
+  padding: 12px max(12px, env(safe-area-inset-right))
+           max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  pointer-events: none;
+  z-index: 5;
 }
 
-.filename {
+.chip {
+  pointer-events: auto;
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  font-size: 0.78rem;
+  color: var(--color-subtle);
+  transition: opacity var(--transition);
+}
+
+.chip-name {
   grid-column: 1;
-  min-width: 0;
-  max-width: 100%;
+  justify-self: start;
+  max-width: min(45%, 320px);
+  padding: 5px 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  justify-self: start;
 }
 
-.dimensions {
+.chip-dims {
   grid-column: 3;
   justify-self: end;
+  padding: 5px 12px;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.floating-info.is-dimmed .chip-name,
+.floating-info.is-dimmed .chip-dims {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .zoom-controls {
   grid-column: 2;
+  justify-self: center;
   display: flex;
   align-items: stretch;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
   overflow: hidden;
+  padding: 0;
 }
 
 .zoom-btn {
-  width: 26px;
-  height: 22px;
+  width: 30px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,8 +143,8 @@ function stepZoomOut(): void {
 }
 
 .zoom-value {
-  min-width: 48px;
-  height: 22px;
+  min-width: 52px;
+  height: 28px;
   padding: 0 6px;
   background: none;
   border: none;
@@ -141,27 +166,18 @@ function stepZoomOut(): void {
 }
 
 @media (max-width: 639px) {
-  .statusbar { padding: 0 10px; font-size: 0.72rem; }
-  .dimensions { display: none; }
-}
-
-@media (min-width: 640px) {
-  .statusbar { padding-bottom: env(safe-area-inset-bottom); }
+  .floating-info { padding: 10px; }
+  .chip-name,
+  .chip-dims { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .statusbar { display: none; }
+  .floating-info { display: none; }
 }
 
 /* Touch devices */
 @media (hover: none), (pointer: coarse) {
-  .statusbar { min-height: 48px; }
-  .zoom-btn  { width: 44px; height: 40px; }
+  .zoom-btn   { width: 44px; height: 40px; }
   .zoom-value { height: 40px; }
-}
-
-/* Touch + tablet/desktop */
-@media (hover: none) and (min-width: 640px), (pointer: coarse) and (min-width: 640px) {
-  .statusbar { min-height: calc(48px + env(safe-area-inset-bottom)); }
 }
 </style>
