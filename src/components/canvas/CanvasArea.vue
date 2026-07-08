@@ -1,6 +1,7 @@
 <!--
   Central workspace. Shows CanvasDropZone when no image is loaded, the image
-  itself once one is available, and CanvasStatusBar at the bottom.
+  itself once one is available, and CanvasStatusBar as floating info chips
+  layered over the bottom of the canvas.
 -->
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
