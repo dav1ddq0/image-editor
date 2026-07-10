@@ -1,7 +1,8 @@
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { ToolId, FilterId, ImageDescriptor, Adjustments, AdjustmentKey, AspectPreset, CropRect, TextLayer } from '@/types/editor'
+import type { ToolId, FilterId, ImageDescriptor, ImageMetadata, Adjustments, AdjustmentKey, AspectPreset, CropRect, TextLayer } from '@/types/editor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
+import { readImageExif } from '@/utils/imageExifMetadata'
 
 interface HistorySnapshot {
   image:          ImageDescriptor
@@ -20,6 +21,7 @@ export const useEditorStore = defineStore('editor', () => {
   const image          = ref<ImageDescriptor | null>(null)
   const originalImage  = ref<ImageDescriptor | null>(null)
   const selectedFilter = ref<FilterId>('none')
+  const sourceMeta = ref<ImageMetadata | null>(null)
 
   // rotation is always a multiple of 90, stored in degrees (0 | 90 | 180 | 270)
   const rotation = ref<number>(0)
@@ -143,6 +145,17 @@ export const useEditorStore = defineStore('editor', () => {
     selectedTool.value = selectedTool.value === tool ? null : tool
   }
 
+  async function loadMetadata(file: File): Promise<void> {
+    const exifInfo = await readImageExif(file)
+    sourceMeta.value = {
+      name:         file.name,
+      size:         file.size,
+      type:         file.type,
+      lastModified: file.lastModified,
+      exifInfo,
+    }
+  }
+
   function loadImage(file: File): void {
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -164,6 +177,8 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     img.src = url
+
+    loadMetadata(file);
   }
 
   function updateAdjustment(key: AdjustmentKey, value: number): void {
@@ -423,6 +438,8 @@ export const useEditorStore = defineStore('editor', () => {
     cssTransform,
     cropPreset,
     cropLocked,
+    originalImage,
+    sourceMeta,
     selectTool,
     loadImage,
     updateAdjustment,

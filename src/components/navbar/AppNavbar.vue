@@ -7,23 +7,25 @@ import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
 
 const props = defineProps<{ hasImage?: boolean }>()
-const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'toggle-panel': [] }>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-panel': [] }>()
 
 const { isDark, toggle: toggleTheme } = useAppTheme()
 
 const overflowItems = computed(() => [
-  { key: 'scan-qr',      label: 'Scan QR',      disabled: !props.hasImage },
-  { key: 'scan-barcode', label: 'Scan Barcode', disabled: !props.hasImage },
-  { key: 'ascii-art',    label: 'ASCII Art',    disabled: !props.hasImage },
-  { key: 'extract-text', label: 'Extract Text', disabled: !props.hasImage },
+  { key: 'scan-qr',          label: 'Scan QR',          disabled: !props.hasImage },
+  { key: 'scan-barcode',     label: 'Scan Barcode',     disabled: !props.hasImage },
+  { key: 'ascii-art',        label: 'ASCII Art',        disabled: !props.hasImage },
+  { key: 'extract-text',     label: 'Extract Text',     disabled: !props.hasImage },
+  { key: 'image-properties', label: 'Image Properties', disabled: !props.hasImage },
 ])
 
 function onOverflowSelect(key: string): void {
   switch (key) {
-    case 'scan-qr':      emit('scan-qr');      break
-    case 'scan-barcode': emit('scan-barcode'); break
-    case 'ascii-art':    emit('ascii-art');    break
-    case 'extract-text': emit('extract-text'); break
+    case 'scan-qr':          emit('scan-qr');          break
+    case 'scan-barcode':     emit('scan-barcode');     break
+    case 'ascii-art':        emit('ascii-art');        break
+    case 'extract-text':     emit('extract-text');     break
+    case 'image-properties': emit('image-properties'); break
   }
 }
 </script>
@@ -111,6 +113,12 @@ function onOverflowSelect(key: string): void {
         </svg>
         <span class="btn-label">Extract Text</span>
         <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
+      </v-btn>
+
+      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('image-properties')">
+        <v-icon class="act-icon" icon="mdi-information-outline" size="20" />
+        <span class="btn-label">Properties</span>
+        <v-tooltip activator="parent" location="bottom" text="Image properties" />
       </v-btn>
 
       <div class="overflow-only">

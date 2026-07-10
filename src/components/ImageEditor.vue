@@ -21,11 +21,13 @@ import QrScanDialog      from './qr/QrScanDialog.vue'
 import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
 import AsciiArtDialog    from './ascii/AsciiArtDialog.vue'
 import ExtractTextDialog from './ocr/ExtractTextDialog.vue'
+import ImagePropertiesDialog from './properties/ImagePropertiesDialog.vue'
 import type { ExportOptions } from '@/types/editor'
 
 const editor = useEditorStore()
-const showExportDialog = ref(false)
-const panelOpen        = ref(false)
+const showExportDialog     = ref(false)
+const showPropertiesDialog = ref(false)
+const panelOpen            = ref(false)
 
 // ── QR Scanner ──────────────────────────────────────────────────────────────
 const showQrDialog = ref(false)
@@ -250,6 +252,7 @@ function exportImage(options: ExportOptions): void {
       @scan-barcode="scanBarcodeImage"
       @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"
       @extract-text="extractText"
+      @image-properties="showPropertiesDialog = true"
       @toggle-panel="panelOpen = !panelOpen"
     />
 
@@ -267,6 +270,9 @@ function exportImage(options: ExportOptions): void {
       :default-name="editor.image?.name ?? 'image'"
       @export="exportImage"
     />
+
+    
+    <ImagePropertiesDialog v-model:visible="showPropertiesDialog" />
 
     <QrScanDialog
       v-model:visible="showQrDialog"
