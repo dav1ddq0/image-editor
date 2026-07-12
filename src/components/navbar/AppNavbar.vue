@@ -1,5 +1,8 @@
 <!--
-  Top navigation bar. Renders the brand and action buttons.
+  Top navigation bar, laid out in three zones:
+  - left:   brand
+  - center: the four primary actions (Open, Save, Export, Properties) as
+  - right:  secondary tools (Scan QR, Barcode, ASCII, Extract Text),
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -12,61 +15,72 @@ const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-
 const { isDark, toggle: toggleTheme } = useAppTheme()
 
 const overflowItems = computed(() => [
-  { key: 'scan-qr',          label: 'Scan QR',          disabled: !props.hasImage },
-  { key: 'scan-barcode',     label: 'Scan Barcode',     disabled: !props.hasImage },
-  { key: 'ascii-art',        label: 'ASCII Art',        disabled: !props.hasImage },
-  { key: 'extract-text',     label: 'Extract Text',     disabled: !props.hasImage },
-  { key: 'image-properties', label: 'Image Properties', disabled: !props.hasImage },
+  { key: 'scan-qr',      label: 'Scan QR',      disabled: !props.hasImage },
+  { key: 'scan-barcode', label: 'Scan Barcode', disabled: !props.hasImage },
+  { key: 'ascii-art',    label: 'ASCII Art',    disabled: !props.hasImage },
+  { key: 'extract-text', label: 'Extract Text', disabled: !props.hasImage },
 ])
 
 function onOverflowSelect(key: string): void {
   switch (key) {
-    case 'scan-qr':          emit('scan-qr');          break
-    case 'scan-barcode':     emit('scan-barcode');     break
-    case 'ascii-art':        emit('ascii-art');        break
-    case 'extract-text':     emit('extract-text');     break
-    case 'image-properties': emit('image-properties'); break
+    case 'scan-qr':      emit('scan-qr');      break
+    case 'scan-barcode': emit('scan-barcode'); break
+    case 'ascii-art':    emit('ascii-art');    break
+    case 'extract-text': emit('extract-text'); break
   }
 }
+
+function blurActivator(e: MouseEvent): void {
+  if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur()
+}
+
 </script>
 
 <template>
   <header class="navbar">
 
-    <div class="navbar-brand">
-      <span class="brand-badge">
-      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
-        <circle cx="5.5" cy="6.5" r="1.6" fill="currentColor"/>
-        <path d="M2.5 14.5 L7 9.5 L10 12 L12.5 9.5 L15.5 14.5"
-              stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="16.5" y1="13.5" x2="22" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <path d="M15 15 Q13 18.5 14.2 20 Q15.8 21.2 17.2 19.2 L16.5 13.5 Z" fill="currentColor"/>
-      </svg>
-      </span>
-      <span class="brand-name">Image Editor</span>
+    <div class="navbar-zone navbar-left">
+      <div class="navbar-brand">
+        <span class="brand-badge">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="5.5" cy="6.5" r="1.6" fill="currentColor"/>
+          <path d="M2.5 14.5 L7 9.5 L10 12 L12.5 9.5 L15.5 14.5"
+                stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="16.5" y1="13.5" x2="22" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M15 15 Q13 18.5 14.2 20 Q15.8 21.2 17.2 19.2 L16.5 13.5 Z" fill="currentColor"/>
+        </svg>
+        </span>
+        <span class="brand-name">Image Editor</span>
+      </div>
+
     </div>
 
-    <nav class="navbar-actions">
-      <v-btn class="nav-btn" variant="text" @click="emit('open')">
-        <v-icon icon="mdi-folder-image" size="20" />
-        <span class="btn-label">Open Image</span>
+    <!-- primary actions -->
+    <nav class="navbar-zone navbar-center" aria-label="Primary actions">
+      <v-btn class="nav-icon-btn" variant="text" icon aria-label="Open image" @click="blurActivator($event); emit('open')">
+        <v-icon icon="mdi-folder-image" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Open image" />
       </v-btn>
 
-      <v-btn class="nav-btn" variant="text" @click="emit('save')">
-        <v-icon icon="mdi-content-save-outline" size="20" />
-        <span class="btn-label">Save</span>
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Save" @click="blurActivator($event); emit('save')">
+        <v-icon icon="mdi-content-save-outline" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Save" />
       </v-btn>
 
-      <v-btn class="nav-btn" variant="text" @click="emit('export')">
-        <v-icon icon="mdi-export-variant" size="20" />
-        <span class="btn-label">Export</span>
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Export" @click="blurActivator($event); emit('export')">
+        <v-icon icon="mdi-export-variant" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Export" />
       </v-btn>
 
-      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('scan-qr')">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Image properties" @click="blurActivator($event); emit('image-properties')">
+        <v-icon icon="mdi-information-outline" size="22" />
+        <v-tooltip activator="parent" location="bottom" text="Image properties" />
+      </v-btn>
+    </nav>
+
+    <div class="navbar-zone navbar-right">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan QR code" @click="blurActivator($event); emit('scan-qr')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3"  y="3"  width="7" height="7" rx="1" />
@@ -77,11 +91,10 @@ function onOverflowSelect(key: string): void {
           <rect x="5"  y="16" width="3" height="3" fill="currentColor" stroke="none" />
           <path d="M14 14h3v3M17 17h3M14 20h3" />
         </svg>
-        <span class="btn-label">Scan QR</span>
         <v-tooltip activator="parent" location="bottom" text="Scan QR code" />
       </v-btn>
 
-      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('scan-barcode')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan barcode" @click="blurActivator($event); emit('scan-barcode')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
           <line x1="4"  y1="4" x2="4"  y2="20" />
@@ -92,17 +105,15 @@ function onOverflowSelect(key: string): void {
           <line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5" />
           <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
         </svg>
-        <span class="btn-label">Scan Barcode</span>
         <v-tooltip activator="parent" location="bottom" text="Scan barcode" />
       </v-btn>
 
-      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('ascii-art')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Generate ASCII art" @click="blurActivator($event); emit('ascii-art')">
         <span class="act-icon ascii-icon" aria-hidden="true" />
-        <span class="btn-label">ASCII Art</span>
         <v-tooltip activator="parent" location="bottom" text="Generate ASCII art" />
       </v-btn>
 
-      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('extract-text')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Extract text from image" @click="blurActivator($event); emit('extract-text')">
         <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="4" y="2" width="13" height="18" rx="2" />
@@ -111,14 +122,7 @@ function onOverflowSelect(key: string): void {
           <line x1="7" y1="14" x2="15" y2="14" />
           <line x1="7" y1="17" x2="11" y2="17" />
         </svg>
-        <span class="btn-label">Extract Text</span>
         <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
-      </v-btn>
-
-      <v-btn class="nav-btn secondary-action" variant="text" :disabled="!hasImage" @click="emit('image-properties')">
-        <v-icon class="act-icon" icon="mdi-information-outline" size="20" />
-        <span class="btn-label">Properties</span>
-        <v-tooltip activator="parent" location="bottom" text="Image properties" />
       </v-btn>
 
       <div class="overflow-only">
@@ -129,26 +133,27 @@ function onOverflowSelect(key: string): void {
       </div>
 
       <!-- Theme toggle (light / dark) -->
-      <v-btn class="nav-icon-btn" variant="text" icon @click="toggleTheme">
+      <v-btn class="nav-icon-btn" variant="text" icon @click="blurActivator($event); toggleTheme()">
         <v-icon :icon="isDark ? 'mdi-weather-night' : 'mdi-white-balance-sunny'" />
         <v-tooltip activator="parent" location="bottom" :text="isDark ? 'Switch to light theme' : 'Switch to dark theme'" />
       </v-btn>
 
       <!-- Tablet/phone: toggle the right settings panel -->
-      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon @click="emit('toggle-panel')">
+      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon @click="blurActivator($event); emit('toggle-panel')">
         <v-icon icon="mdi-tune-variant" />
         <v-tooltip activator="parent" location="bottom" text="Toggle settings panel" />
       </v-btn>
-    </nav>
+    </div>
 
   </header>
 </template>
 
 <style scoped>
 .navbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   background: var(--color-surface);
   min-height: 56px;
   border-bottom: 1px solid var(--color-border);
@@ -158,6 +163,17 @@ function onOverflowSelect(key: string): void {
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(12px, env(safe-area-inset-right));
 }
+
+.navbar-zone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.navbar-left  { justify-self: start; }
+.navbar-center { justify-self: center; }
+.navbar-right { justify-self: end; }
 
 .navbar-brand {
   display: flex;
@@ -172,6 +188,7 @@ function onOverflowSelect(key: string): void {
   font-family: 'Orbitron', sans-serif;
   font-size: 1rem;
   letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 .brand-badge {
@@ -195,27 +212,11 @@ function onOverflowSelect(key: string): void {
   height: 20px;
 }
 
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.nav-btn {
-  text-transform: none;
-  letter-spacing: 0.01em;
-  font-weight: 500;
-}
-
-.nav-btn :deep(.v-btn__content) {
-  gap: 6px;
-}
-
-.act-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.act-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
 .ascii-icon {
-  width: 24px;
-  height: 18px;
+  width: 26px;
+  height: 20px;
   background-color: currentColor;
   -webkit-mask: url('/fish-ascii.svg') no-repeat center / contain;
   mask: url('/fish-ascii.svg') no-repeat center / contain;
@@ -226,13 +227,14 @@ function onOverflowSelect(key: string): void {
 .overflow-only { display: none; }
 
 @media (max-width: 1240px) {
-  .btn-label { display: none; }
   .panel-toggle { display: inline-flex; }
 }
 
 @media (max-width: 639px) {
   .navbar {
+    grid-template-columns: auto 1fr auto;
     min-height: 52px;
+    gap: 4px;
     padding-left: max(10px, env(safe-area-inset-left));
     padding-right: max(8px, env(safe-area-inset-right));
   }
