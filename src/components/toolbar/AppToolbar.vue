@@ -35,11 +35,6 @@ const drawingTools: ToolDefinition[] = [
       />
     </div>
 
-    <div class="tool-group">
-      <ToolButton icon="mdi-undo" label="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()" />
-      <ToolButton icon="mdi-redo" label="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()" />
-    </div>
-
   </aside>
 </template>
 
@@ -97,16 +92,6 @@ const drawingTools: ToolDefinition[] = [
     gap: 0;
     justify-content: space-evenly;
   }
-
-  .tool-group:not(:last-child)::after {
-    width: 1px;
-    height: 24px;
-    margin-top: 0;
-    margin-left: 2px;
-  }
-
-  .tool-group:first-child { flex: 8 1 0; }
-  .tool-group:last-child  { flex: 2 1 0; }
 
   .tool-group :deep(.tool-btn) {
     flex: 1 1 0;

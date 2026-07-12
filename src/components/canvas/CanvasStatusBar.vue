@@ -1,19 +1,9 @@
 <!--
-  Floating canvas info layer. The file name,zoom controls and resolution now 
-  float as frosted-glass chips over the bottomof the canvas 
+  Floating canvas info layer. Reset-to-original, zoom controls and undo/redo
+  float as frosted-glass chips over the bottom of the canvas.
 -->
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
-
-withDefaults(defineProps<{
-  imageWidth?:  number | null
-  imageHeight?: number | null
-  imageName?:   string | null
-}>(), {
-  imageWidth:  null,
-  imageHeight: null,
-  imageName:   null,
-})
 
 const editor = useEditorStore()
 
@@ -38,8 +28,11 @@ function stepZoomOut(): void {
     class="floating-info"
     :class="{ 'is-dimmed': editor.zoomLocked }"
   >
-    <span class="chip chip-name">{{ imageName ?? 'Untitled' }}</span>
-
+    <div class="chip reset-control">
+      <button class="zoom-btn" title="Reset to original" :disabled="!editor.hasImage" @click="editor.resetImage()">
+        <v-icon icon="mdi-backup-restore" size="18" />
+      </button>
+    </div>
 
     <div v-if="!editor.zoomLocked" class="chip zoom-controls">
       <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10" @click="stepZoomOut">−</button>
@@ -47,9 +40,14 @@ function stepZoomOut(): void {
       <button class="zoom-btn" title="Zoom in" :disabled="editor.zoom >= 500" @click="stepZoomIn">+</button>
     </div>
 
-    <span v-if="imageWidth && imageHeight" class="chip chip-dims">
-      W: {{ imageWidth }}px &nbsp; H: {{ imageHeight }}px
-    </span>
+    <div class="chip undo-redo-controls">
+      <button class="zoom-btn" title="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()">
+        <v-icon icon="mdi-undo" size="18" />
+      </button>
+      <button class="zoom-btn" title="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()">
+        <v-icon icon="mdi-redo" size="18" />
+      </button>
+    </div>
   </div>
 </template>
 
@@ -81,26 +79,30 @@ function stepZoomOut(): void {
   transition: opacity var(--transition);
 }
 
-.chip-name {
+.reset-control {
   grid-column: 1;
   justify-self: start;
-  max-width: min(45%, 320px);
-  padding: 5px 12px;
+  display: flex;
+  align-items: stretch;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding: 0;
 }
 
-.chip-dims {
+.undo-redo-controls {
   grid-column: 3;
   justify-self: end;
-  padding: 5px 12px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
 }
 
-.floating-info.is-dimmed .chip-name,
-.floating-info.is-dimmed .chip-dims {
+.undo-redo-controls .zoom-btn:first-child {
+  border-inline-end: 1px solid var(--color-border);
+}
+
+.floating-info.is-dimmed .reset-control,
+.floating-info.is-dimmed .undo-redo-controls {
   opacity: 0;
   pointer-events: none;
 }
@@ -167,8 +169,6 @@ function stepZoomOut(): void {
 
 @media (max-width: 639px) {
   .floating-info { padding: 10px; }
-  .chip-name,
-  .chip-dims { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
