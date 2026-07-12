@@ -344,11 +344,7 @@ const sharpenKernel = computed<string>(() => {
       </div>
     </div>
 
-    <CanvasStatusBar
-      :image-width="editor.image?.width"
-      :image-height="editor.image?.height"
-      :image-name="editor.image?.name"
-    />
+    <CanvasStatusBar />
 
   </main>
 </template>

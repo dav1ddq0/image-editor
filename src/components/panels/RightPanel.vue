@@ -3,15 +3,12 @@
   Each sub-panel manages its own store interactions independently.
 -->
 <script setup lang="ts">
-import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentsPanel from './AdjustmentsPanel.vue'
 import FiltersPanel from './FiltersPanel.vue'
 import TransformPanel from './TransformPanel.vue'
 
 defineProps<{ panelOpen?: boolean }>()
 defineEmits<{ 'close-panel': [] }>()
-
-const editor = useEditorStore()
 </script>
 
 <template>
@@ -30,20 +27,6 @@ const editor = useEditorStore()
     <AdjustmentsPanel />
     <FiltersPanel />
     <TransformPanel />
-
-    <div class="reset-section">
-      <v-btn
-        class="reset-btn"
-        color="error"
-        variant="tonal"
-        prepend-icon="mdi-backup-restore"
-        block
-        :disabled="!editor.hasImage"
-        @click="editor.resetImage()"
-      >
-        Reset to Original
-      </v-btn>
-    </div>
   </aside>
 </template>
 
@@ -54,15 +37,6 @@ const editor = useEditorStore()
   border-left: 1px solid var(--color-border);
   overflow-y: auto;
   flex-shrink: 0;
-}
-
-.reset-section {
-  padding: 16px;
-}
-
-.reset-btn {
-  text-transform: none;
-  letter-spacing: 0.01em;
 }
 
 .panel-mobile-header { display: none; }
