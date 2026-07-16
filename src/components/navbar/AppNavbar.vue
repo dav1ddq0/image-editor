@@ -43,15 +43,14 @@ function blurActivator(e: MouseEvent): void {
       <div class="navbar-brand">
         <span class="brand-badge">
         <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="5.5" cy="6.5" r="1.6" fill="currentColor"/>
-          <path d="M2.5 14.5 L7 9.5 L10 12 L12.5 9.5 L15.5 14.5"
-                stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="16.5" y1="13.5" x2="22" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M15 15 Q13 18.5 14.2 20 Q15.8 21.2 17.2 19.2 L16.5 13.5 Z" fill="currentColor"/>
+          <path d="M12 4.5a7.5 7.5 0 1 0 4 13.8c-1.3 0-2.3-.85-2.3-1.9s.95-1.65 2-1.65a2.5 2.5 0 0 0 0-5"
+                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="9" cy="10" r="1" fill="currentColor"/>
+          <circle cx="14" cy="8" r="1" fill="currentColor"/>
+          <circle cx="10" cy="14.5" r="1" fill="currentColor"/>
         </svg>
         </span>
-        <span class="brand-name">Image Editor</span>
+        <span class="brand-name">Repictum</span>
       </div>
 
     </div>
@@ -185,10 +184,11 @@ function blurActivator(e: MouseEvent): void {
 
 .brand-name {
   color: var(--color-text);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1rem;
-  letter-spacing: 0.06em;
+  font-family: 'Press Start 2P', 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .brand-badge {
