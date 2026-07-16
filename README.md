@@ -1,4 +1,4 @@
-# Image Editor
+# Repictum
 
 A fully-featured, browser-based image editor built with Vue 3, TypeScript, and the Canvas 2D API. All effects are non-destructive until committed, with full undo/redo support.
 
