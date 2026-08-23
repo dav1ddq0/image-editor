@@ -8,6 +8,7 @@
 import { computed } from 'vue'
 import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
+import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt } from '@/components/icons'
 
 const props = defineProps<{ hasImage?: boolean }>()
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-panel': [] }>()
@@ -42,13 +43,7 @@ function blurActivator(e: MouseEvent): void {
     <div class="navbar-zone navbar-left">
       <div class="navbar-brand">
         <span class="brand-badge">
-        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 4.5a7.5 7.5 0 1 0 4 13.8c-1.3 0-2.3-.85-2.3-1.9s.95-1.65 2-1.65a2.5 2.5 0 0 0 0-5"
-                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <circle cx="9" cy="10" r="1" fill="currentColor"/>
-          <circle cx="14" cy="8" r="1" fill="currentColor"/>
-          <circle cx="10" cy="14.5" r="1" fill="currentColor"/>
-        </svg>
+        <IconBrand class="brand-icon" />
         </span>
         <span class="brand-name">Repictum</span>
       </div>
@@ -80,47 +75,22 @@ function blurActivator(e: MouseEvent): void {
 
     <div class="navbar-zone navbar-right">
       <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan QR code" @click="blurActivator($event); emit('scan-qr')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3"  y="3"  width="7" height="7" rx="1" />
-          <rect x="14" y="3"  width="7" height="7" rx="1" />
-          <rect x="3"  y="14" width="7" height="7" rx="1" />
-          <rect x="5"  y="5"  width="3" height="3" fill="currentColor" stroke="none" />
-          <rect x="16" y="5"  width="3" height="3" fill="currentColor" stroke="none" />
-          <rect x="5"  y="16" width="3" height="3" fill="currentColor" stroke="none" />
-          <path d="M14 14h3v3M17 17h3M14 20h3" />
-        </svg>
+        <IconQrScan class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Scan QR code" />
       </v-btn>
 
       <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan barcode" @click="blurActivator($event); emit('scan-barcode')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-          <line x1="4"  y1="4" x2="4"  y2="20" />
-          <line x1="7"  y1="4" x2="7"  y2="20" stroke-width="2.5" />
-          <line x1="10" y1="4" x2="10" y2="20" />
-          <line x1="13" y1="4" x2="13" y2="20" stroke-width="2.5" />
-          <line x1="16" y1="4" x2="16" y2="20" />
-          <line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5" />
-          <line x1="2"  y1="21" x2="22" y2="21" stroke-width="1" />
-        </svg>
+        <IconBarcode class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Scan barcode" />
       </v-btn>
 
       <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Generate ASCII art" @click="blurActivator($event); emit('ascii-art')">
-        <span class="act-icon ascii-icon" aria-hidden="true" />
+        <IconAsciiArt class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Generate ASCII art" />
       </v-btn>
 
       <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Extract text from image" @click="blurActivator($event); emit('extract-text')">
-        <svg class="act-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="4" y="2" width="13" height="18" rx="2" />
-          <path d="M14 2v5h5" stroke-width="1.4" />
-          <line x1="7" y1="11" x2="15" y2="11" />
-          <line x1="7" y1="14" x2="15" y2="14" />
-          <line x1="7" y1="17" x2="11" y2="17" />
-        </svg>
+        <IconExtractText class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
       </v-btn>
 
