@@ -23,7 +23,7 @@ A fully browser-based image editor built for privacy and speed. Crop, draw, adju
 - `src/assets` — bundled & processed (styles, imported images, fonts).
 - `src/public/` = static files served as-is (accessed by direct URL).
 - `src/types/` — TypeScript type definitions shared across the whole project (editor.ts): tool, filter, adjustments, crop, text-layer types, and so on.
-- public/ — Static files served as-is, bypassing Vite: the favicon, the icon sprite, and the fish ASCII art used by the ASCII Art feature.
+- public/ — Static files served as-is, bypassing Vite: the favicon and the icon sprite.
 - `index.html` — The HTML entry point; mounts the app and loads the Google Fonts.
 - `vite.config.ts` — Vite configuration: the `@` alias pointing to src/, and the /image-editor/ base path for the GitHub Pages deployment.
 

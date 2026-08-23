@@ -33,6 +33,11 @@
   /* Soft accent tint for hover states and icon containers. */
   --color-accent-soft: color-mix(in oklab, var(--color-accent) 14%, transparent);
 
+  /* Theme-constant ink used by brand marks (e.g. the navbar badge gradient)
+     that must not shift between light/dark — intentionally not overridden
+     in the light theme block below. */
+  --brand-ink: #16213e;
+
   /* Native form controls + scrollbars follow the theme */
   color-scheme: dark;
 }

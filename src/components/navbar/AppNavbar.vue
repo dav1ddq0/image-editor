@@ -41,11 +41,11 @@ function blurActivator(e: MouseEvent): void {
   <header class="navbar">
 
     <div class="navbar-zone navbar-left">
-      <div class="navbar-brand">
+      <div class="navbar-brand" role="img" aria-label="Repictum">
         <span class="brand-badge">
         <IconBrand class="brand-icon" />
         </span>
-        <span class="brand-name">Repictum</span>
+        <span class="brand-name" aria-hidden="true">Repictum</span>
       </div>
 
     </div>
@@ -154,7 +154,7 @@ function blurActivator(e: MouseEvent): void {
 
 .brand-name {
   color: var(--color-text);
-  font-family: 'Press Start 2P', 'Orbitron', sans-serif;
+  font-family: 'Press Start 2P', sans-serif;
   font-size: 0.8rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -172,7 +172,7 @@ function blurActivator(e: MouseEvent): void {
   background: linear-gradient(
     135deg,
     var(--color-accent),
-    color-mix(in oklab, var(--color-accent) 55%, #16213e)
+    color-mix(in oklab, var(--color-accent) 55%, var(--brand-ink))
   );
   box-shadow: var(--shadow-sm);
 }
@@ -184,13 +184,7 @@ function blurActivator(e: MouseEvent): void {
 
 .act-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
-.ascii-icon {
-  width: 26px;
-  height: 20px;
-  background-color: currentColor;
-  -webkit-mask: url('/fish-ascii.svg') no-repeat center / contain;
-  mask: url('/fish-ascii.svg') no-repeat center / contain;
-}
+.nav-icon-btn.v-btn--disabled { opacity: 0.45; }
 
 .panel-toggle { display: none; }
 
