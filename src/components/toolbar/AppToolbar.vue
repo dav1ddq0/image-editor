@@ -4,7 +4,7 @@
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import ToolButton from './ToolButton.vue'
-import type { ToolDefinition } from '@/types/editor'
+import type { ToolDefinition } from '@/types/tool'
 
 const editor = useEditorStore()
 

@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useTheme } from 'vuetify'
-import type { ExportFormat, ExportOptions } from '@/types/editor'
+import type { ExportFormat, ExportOptions } from '@/types/export'
 
 const props = defineProps<{ visible: boolean; defaultName: string }>()
 

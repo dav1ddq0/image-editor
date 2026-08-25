@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import FilterThumb from './FilterThumb.vue'
-import type { FilterDefinition } from '@/types/editor'
+import type { FilterDefinition } from '@/types/filter'
 
 const editor = useEditorStore()
 

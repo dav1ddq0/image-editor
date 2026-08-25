@@ -4,7 +4,7 @@
 -->
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
-import type { AspectPreset, CropRect } from '@/types/editor'
+import type { AspectPreset, CropRect } from '@/types/crop'
 import { useEditorStore } from '@/stores/editorStore'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()

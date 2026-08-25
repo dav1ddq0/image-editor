@@ -4,7 +4,7 @@
 -->
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { CropRect } from '@/types/editor'
+import type { CropRect } from '@/types/crop'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit = defineEmits<{

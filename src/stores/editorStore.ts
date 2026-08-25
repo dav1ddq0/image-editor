@@ -1,6 +1,11 @@
 import { ref, reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { ToolId, FilterId, ImageDescriptor, ImageMetadata, Adjustments, AdjustmentKey, AspectPreset, CropRect, TextLayer } from '@/types/editor'
+import type { ToolId } from '@/types/tool'
+import type { FilterId } from '@/types/filter'
+import type { ImageDescriptor, ImageMetadata } from '@/types/image'
+import type { Adjustments, AdjustmentKey } from '@/types/adjustments'
+import type { AspectPreset, CropRect } from '@/types/crop'
+import type { TextLayer } from '@/types/text'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 import { readImageExif } from '@/utils/imageExifMetadata'
 

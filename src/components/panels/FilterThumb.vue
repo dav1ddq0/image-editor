@@ -2,7 +2,7 @@
   Clickable filter preset tile
 -->
 <script setup lang="ts">
-import type { FilterId } from '@/types/editor'
+import type { FilterId } from '@/types/filter'
 
 withDefaults(defineProps<{
   id:        FilterId

@@ -4,7 +4,7 @@
 -->
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import type { TextLayer } from '@/types/editor'
+import type { TextLayer } from '@/types/text'
 
 const props = defineProps<{
   imgWidth:      number
