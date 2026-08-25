@@ -59,7 +59,7 @@ function close(): void {
   <v-dialog v-model="dialog" max-width="580" :fullscreen="smAndDown" :theme="theme.name.value" scrollable aria-label="Extract Text">
     <v-card>
 
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title>
         <span>Extract Text</span>
         <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
       </v-card-title>
@@ -173,13 +173,13 @@ function close(): void {
 /* Each text region: invisible selectable text over the image */
 .text-region {
   position: absolute;
-  border-bottom: 2px solid rgba(66, 133, 244, 0.7);
+  border-bottom: 2px solid var(--color-accent);
   cursor: text;
   box-sizing: border-box;
 }
 
 .text-region:hover {
-  background: rgba(66, 133, 244, 0.12);
+  background: var(--color-accent-soft);
   border-radius: 2px;
 }
 

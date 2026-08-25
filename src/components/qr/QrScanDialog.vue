@@ -45,7 +45,7 @@ function close(): void {
   <v-dialog v-model="dialog" max-width="460" :theme="theme.name.value" aria-label="QR Code Scanner">
     <v-card>
 
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title>
         <span>QR Code Scanner</span>
         <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
       </v-card-title>

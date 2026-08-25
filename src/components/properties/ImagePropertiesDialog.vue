@@ -94,10 +94,10 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="460" scrollable :theme="theme.name.value" aria-label="Image Properties">
+  <v-dialog v-model="dialog" max-width="460" max-height="80vh" scrollable :theme="theme.name.value" aria-label="Image Properties">
     <v-card>
 
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title>
         <span>Image Properties</span>
         <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
       </v-card-title>
@@ -125,11 +125,10 @@ function close(): void {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-top: 8px;
 }
 
 .props-group {
-  background: var(--color-bg);
+ background: var(--color-surface-container-highest);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 14px 16px;

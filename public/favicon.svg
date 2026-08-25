@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <!-- Palette body -->
   <path d="M24 9a15 15 0 1 0 8 27.6c-2.6 0-4.6-1.7-4.6-3.8s1.9-3.3 4-3.3a5 5 0 0 0 0-10"
-        stroke="#e94560" stroke-width="3" stroke-linecap="round"/>
+        stroke="#ba122e" stroke-width="3" stroke-linecap="round"/>
   <!-- Paint dots -->
-  <circle cx="18" cy="20" r="2.4" fill="#e94560"/>
-  <circle cx="28" cy="16" r="2.4" fill="#e94560"/>
-  <circle cx="20" cy="29" r="2.4" fill="#e94560"/>
+  <circle cx="18" cy="20" r="2.4" fill="#ba122e"/>
+  <circle cx="28" cy="16" r="2.4" fill="#ba122e"/>
+  <circle cx="20" cy="29" r="2.4" fill="#ba122e"/>
 </svg>

@@ -32,11 +32,8 @@ const emit = defineEmits<{
       :max="max"
       :step="1"
       :disabled="disabled"
-      color="primary"
       density="compact"
       hide-details
-      thumb-size="14"
-      track-size="3"
       @start="emit('dragstart')"
       @update:model-value="emit('update:modelValue', Math.round($event))"
     />

@@ -166,9 +166,9 @@ function blurActivator(e: MouseEvent): void {
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   flex-shrink: 0;
-  color: #fff;
+  color: var(--color-on-accent);
   background: linear-gradient(
     135deg,
     var(--color-accent),

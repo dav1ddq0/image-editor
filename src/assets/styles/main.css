@@ -2,17 +2,24 @@
 
 :root {
   /* Dark theme (default) */
-  --color-bg:        #0d0d1a;
-  --color-surface:   #16213e;
-  --color-border:    #0f3460;
-  --color-accent:    #e94560;
-  --color-text:      #e0e0e0;
-  --color-muted:     #a0a0b0;
-  --color-subtle:    #606080;
-
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --color-bg:        #100e0f;
+  --color-surface:   #201d1d;
+  --color-border:    #574245;
+  --color-accent:    #f6a2b0;
+  --color-text:      #e7e4e4;
+  --color-muted:     #d3c5c7;
+  --color-subtle:    #a78b8f;
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   28px;
+  --radius-full: 999px;
+  --color-surface-container:      #201d1d;
+  --color-surface-container-high: #2e292a;
+  --color-primary-container:      #8b0e23;
+  --color-on-primary-container:   #fad1d8;
+  --color-tertiary:                #eae0ae;
 
   /* Material 3 motion: standard easing for most transitions, emphasized for
      larger surface movements (sheets, panels). */
@@ -27,7 +34,7 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
 
   /* Frosted-glass surface for toolbars that float over the image. */
-  --color-surface-glass: rgba(22, 33, 62, 0.78);
+  --color-surface-glass: rgba(32, 29, 29, 0.82);
   --blur-glass: blur(14px) saturate(1.4);
 
   /* Soft accent tint for hover states and icon containers. */
@@ -36,7 +43,15 @@
   /* Theme-constant ink used by brand marks (e.g. the navbar badge gradient)
      that must not shift between light/dark — intentionally not overridden
      in the light theme block below. */
-  --brand-ink: #16213e;
+  --brand-ink: #2e050c;
+  --swatch-primary:   #ba122e;
+  --swatch-tertiary:  #7a6a1e;
+  --swatch-neutral-1: #5a5a5a;
+  --swatch-neutral-2: #2a2a2a;
+  --color-on-accent: #5d0917;
+  --color-error:    #f1ada7;
+  --color-on-error: #58140e;
+  --color-surface-container-highest: #3b3536;
 
   /* Native form controls + scrollbars follow the theme */
   color-scheme: dark;
@@ -44,19 +59,26 @@
 
 /* Light theme */
 :root:has(.v-theme--light) {
-  --color-bg:        #f4f5fb;
+  --color-bg:        #fafafa;
   --color-surface:   #ffffff;
-  --color-border:    #e2e5f0;
-  --color-accent:    #e0344f;
-  --color-text:      #1c2233;
-  --color-muted:     #5b6178;
-  --color-subtle:    #8b90a8;
-
+  --color-border:    #d3c5c7;
+  --color-accent:    #ba122e;
+  --color-text:      #1b1818;
+  --color-muted:     #574245;
+  --color-subtle:    #916e74;
   --shadow-sm: 0 1px 2px rgba(23, 30, 60, 0.08), 0 1px 3px 1px rgba(23, 30, 60, 0.06);
   --shadow-md: 0 4px 16px rgba(23, 30, 60, 0.12);
   --shadow-lg: 0 8px 32px rgba(23, 30, 60, 0.16);
-
   --color-surface-glass: rgba(255, 255, 255, 0.82);
+  --color-surface-container:      #f1efef;
+  --color-surface-container-high: #ece9ea;
+  --color-primary-container:      #fad1d8;
+  --color-on-primary-container:   #2e050c;
+  --color-tertiary:                #a18d2b;
+  --color-on-accent:              #ffffff;
+  --color-surface-container-highest: #e7e4e4;
+  --color-error:                  #af291d;
+  --color-on-error:               #ffffff;
 
   color-scheme: light;
 }
@@ -95,12 +117,12 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -108,13 +130,19 @@ body {
 }
 
 ::-webkit-scrollbar-corner {
-  background: var(--color-bg);
+  background: transparent;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border) var(--color-bg);
+  scrollbar-color: var(--color-border) transparent;
 }
 
 /* ── Shared button styles ──────────────────────────────────── */
@@ -143,9 +171,9 @@ body {
   input, select, textarea { font-size: 16px; }
 }
 
-.btn-primary   { background: var(--color-accent);  color: #fff; }
-.btn-secondary { background: var(--color-border);  color: var(--color-text); }
-.btn-danger    { background: #c0392b;              color: #fff; }
+.btn-primary   { background: var(--color-accent);  color: var(--color-on-accent); border-radius: var(--radius-full); }
+.btn-secondary { background: var(--color-primary-container); color: var(--color-on-primary-container); border-radius: var(--radius-full); }
+.btn-danger    { background: var(--color-error);   color: var(--color-on-error); border-radius: var(--radius-full); }
 .btn-small     { padding: 5px 10px; font-size: 0.78rem; }
 
 /* ── Floating overlay-toolbar controls ───────────────────────── */
@@ -158,7 +186,7 @@ body {
   min-width: 30px;
   padding: 0 12px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--color-muted);
   font-family: inherit;
@@ -173,10 +201,14 @@ body {
 
 .ov-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-.ov-btn.active,
+.ov-btn.active {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
 .ov-btn--primary {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .ov-btn--icon {
@@ -189,8 +221,13 @@ body {
     background: var(--color-accent-soft);
     color: var(--color-accent);
   }
-  .ov-btn--primary:hover:not(:disabled),
-  .ov-btn.active:hover:not(:disabled) { opacity: 0.88; }
+
+  .ov-btn--primary:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--color-accent) 92%, var(--color-on-accent) 8%);
+  }
+  .ov-btn.active:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--color-primary-container) 92%, var(--color-on-primary-container) 8%);
+  }
 }
 
 .ov-sep {
@@ -233,6 +270,7 @@ body {
   background: none;
   cursor: pointer;
   flex-shrink: 0;
+  accent-color: var(--color-accent);
 }
 .ov-swatch::-webkit-color-swatch-wrapper { padding: 2px; }
 .ov-swatch::-webkit-color-swatch { border: none; border-radius: 50%; }
@@ -248,37 +286,40 @@ body {
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
+  accent-color: var(--color-accent);
 }
 .ov-range::-webkit-slider-runnable-track {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-border);
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-muted);
 }
 .ov-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: none;
   background: var(--color-accent);
-  margin-top: -5.5px;
+  margin-top: -7px;
+  box-shadow: var(--shadow-sm);
 }
 .ov-range::-moz-range-track {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-border);
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-muted);
 }
 .ov-range::-moz-range-progress {
-  height: 3px;
-  border-radius: 2px;
+  height: 4px;
+  border-radius: var(--radius-full);
   background: var(--color-accent);
 }
 .ov-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: none;
   background: var(--color-accent);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Compact themed */
@@ -303,6 +344,53 @@ body {
   .ov-swatch { width: 32px; height: 32px; }
   .ov-select { height: 38px; }
   .ov-range  { height: 38px; width: 96px; }
+}
+
+.v-dialog .v-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 8px 12px 24px;
+  background: var(--color-surface-container-highest);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.v-dialog .v-card-title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v-dialog .v-card-title .v-btn.v-btn--icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .v-dialog .v-card-title .v-btn.v-btn--icon:hover {
+    color: var(--color-text);
+  }
+}
+
+.v-dialog .v-card-text {
+  padding: 16px 24px;
+  color: var(--color-text);
+}
+
+.v-dialog .v-card-actions {
+  padding: 8px 16px 16px;
+}
+
+.v-dialog--fullscreen > .v-overlay__content > .v-card {
+  border-radius: 0 !important;
 }
 
 /* ── Shared panel primitives ───────────────────────────────── */
