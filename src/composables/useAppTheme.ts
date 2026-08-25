@@ -3,7 +3,7 @@ import { useTheme } from 'vuetify'
 
 const STORAGE_KEY = 'image-editor-theme'
 const THEME_COLOR: Record<'light' | 'dark', string> = {
-  dark:  '#16213e',
+  dark:  '#100e0f',
   light: '#ffffff',
 }
 

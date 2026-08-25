@@ -18,10 +18,10 @@ const emit = defineEmits<{ click: [] }>()
     class="tool-btn"
     :class="{ active }"
     :color="active ? 'primary' : undefined"
-    :variant="active ? 'flat' : 'text'"
+    :variant="active ? 'tonal' : 'text'"
     :disabled="disabled"
     icon
-    rounded="lg"
+    rounded="16"
     size="small"
     @click="emit('click')"
   >

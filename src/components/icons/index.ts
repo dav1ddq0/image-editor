@@ -1,0 +1,5 @@
+export { default as IconBrand } from './IconBrand.vue'
+export { default as IconQrScan } from './IconQrScan.vue'
+export { default as IconBarcode } from './IconBarcode.vue'
+export { default as IconExtractText } from './IconExtractText.vue'
+export { default as IconAsciiArt } from './IconAsciiArt.vue'

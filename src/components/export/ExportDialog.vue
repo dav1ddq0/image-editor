@@ -59,7 +59,7 @@ function close(): void {
   <v-dialog v-model="dialog" max-width="448" :theme="theme.name.value">
     <v-card>
 
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title>
         <span>Export Image</span>
         <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
       </v-card-title>
@@ -69,8 +69,6 @@ function close(): void {
         <v-btn-toggle
           v-model="format"
           mandatory
-          divided
-          rounded="lg"
           color="primary"
           class="format-toggle mb-6"
         >
@@ -117,11 +115,24 @@ function close(): void {
 
 <style scoped>
 .format-toggle {
+  display: flex;
+  gap: 8px;
   width: 100%;
-  height: 44px;
+  min-height: 44px;
+  background: transparent;
 }
 
 .format-toggle :deep(.v-btn) {
   flex: 1 1 0;
+  min-width: 0;
+  border-radius: var(--radius-full);
+}
+
+.format-toggle :deep(.v-btn:not(.v-btn--active)) {
+  background: var(--color-surface-container-highest);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .format-toggle { min-height: 48px; }
 }
 </style>

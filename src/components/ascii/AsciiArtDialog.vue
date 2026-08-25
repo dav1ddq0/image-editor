@@ -55,7 +55,7 @@ function buildHtmlPayload(): string {
     `font-family:'Courier New',Courier,monospace`,
     `font-size:${localFontSize.value}px`,
     `line-height:1.1`,
-    `color:${colorMode.value ? 'inherit' : '#e0e0e0'}`,
+    `color:${colorMode.value ? 'inherit' : '#1a1a1a'}`,
     `white-space:pre`,
     `display:block`,
   ].join(';')
@@ -109,7 +109,7 @@ function close(): void {
   <v-dialog v-model="dialog" max-width="640" :fullscreen="smAndDown" :theme="theme.name.value" scrollable aria-label="ASCII Art Generator">
     <v-card class="ascii-card">
 
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title>
         <span>ASCII Art</span>
         <v-btn variant="text" icon="mdi-close" size="small" density="comfortable" aria-label="Close" @click="close" />
       </v-card-title>

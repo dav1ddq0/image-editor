@@ -164,7 +164,6 @@ function applyStrokes(): void {
   display: block;
 }
 
-/* ── Floating toolbar ── */
 .brush-toolbar {
   position: absolute;
   top: 12px;
