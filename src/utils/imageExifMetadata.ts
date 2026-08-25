@@ -4,7 +4,7 @@
  * EXIF extraction (camera, capture date, exposure and GPS location) via exifr.
  */
 import exifr from 'exifr'
-import type { ExifInfo } from '../types/editor'
+import type { ExifInfo } from '../types/image'
 
 // Reads EXIF/GPS from the original file.
 export async function readImageExif(file: File): Promise<ExifInfo> {

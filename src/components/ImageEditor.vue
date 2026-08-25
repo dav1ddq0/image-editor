@@ -22,7 +22,7 @@ import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
 import AsciiArtDialog    from './ascii/AsciiArtDialog.vue'
 import ExtractTextDialog from './ocr/ExtractTextDialog.vue'
 import ImagePropertiesDialog from './properties/ImagePropertiesDialog.vue'
-import type { ExportOptions } from '@/types/editor'
+import type { ExportOptions } from '@/types/export'
 
 const editor = useEditorStore()
 const showExportDialog     = ref(false)

@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentSlider from './AdjustmentSlider.vue'
-import type { AdjustmentKey } from '@/types/editor'
+import type { AdjustmentKey } from '@/types/adjustments'
 
 interface SliderConfig {
   key:   AdjustmentKey
