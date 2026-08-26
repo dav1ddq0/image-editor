@@ -1,4 +1,4 @@
-# 001 · Split shared types by domain — Tasks
+# 001 · Split shared types by domain: Tasks
 
 _Actionable checklist derived from `plan.md`. Small, concrete tasks; mark `[x]` when done._
 
@@ -23,6 +23,6 @@ _Actionable checklist derived from `plan.md`. Small, concrete tasks; mark `[x]` 
 - [x] Update imports in `src/utils/imageExifMetadata.ts` (keep its relative-path convention).
 - [x] Update imports in `src/stores/editorStore.ts` (six domains).
 - [x] Sweep: `grep -rn "types/editor'" src` returns zero matches.
-- [x] Run `npm run build` — type-check + build both pass clean.
+- [x] Run `npm run build`: type-check + build both pass clean.
 - [x] Validate against the acceptance criteria in `spec.md`.
 - [x] Move the feature to "Done" in `../../constitution/roadmap.md`.

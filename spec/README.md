@@ -1,4 +1,4 @@
-# spec/ — Spec Driven Development
+# spec/: Spec Driven Development
 
 > Spec-driven development (SDD) for Repictum: write the spec first, then the plan, then the tasks, and only then touch the code.
 
@@ -26,4 +26,4 @@ spec/
 5. Implement and validate (`npm run build` type-check + build, since there's no test suite).
 6. Update `constitution/roadmap.md` (move the feature to "Done").
 
-> The constitution rules: if a feature conflicts with `mission.md` or `tech-stack.md`, the feature gets rethought — not the constitution.
+> The constitution rules: if a feature conflicts with `mission.md` or `tech-stack.md`, the feature gets rethought; not the constitution.

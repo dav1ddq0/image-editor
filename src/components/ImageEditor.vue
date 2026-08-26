@@ -170,7 +170,7 @@ function openImage(): void {
 }
 
 // Builds the fully composited canvas (filters + transform + sharpness).
-// Used by both Save and Export so the output is always identical.
+// Used by Save, Export and Copy so the output is always identical.
 function buildCanvas(img: HTMLImageElement): HTMLCanvasElement {
   return buildRenderedCanvas(img, {
     cssFilter: editor.cssFilter,
@@ -200,6 +200,35 @@ function saveImage(): void {
   }
 
   img.src = source.src
+}
+
+// Copies the composited image to the system clipboard as PNG: the same pixels
+function copyImageToClipboard(): Promise<boolean> {
+  if (!editor.image) return Promise.resolve(false)
+  const source = editor.image
+
+  return new Promise<boolean>((resolve) => {
+    const img = new Image()
+
+    img.onload = async () => {
+      try {
+        const canvas = buildCanvas(img)
+        const blob   = await new Promise<Blob | null>((res) => {
+          canvas.toBlob(res, 'image/png')
+        })
+        if (!blob) return resolve(false)
+
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        resolve(true)
+      } catch (error) {
+        console.error('Failed to copy image to clipboard:', error)
+        resolve(false)
+      }
+    }
+
+    img.onerror = () => resolve(false)
+    img.src = source.src
+  })
 }
 
 function exportImage(options: ExportOptions): void {
@@ -248,6 +277,7 @@ function exportImage(options: ExportOptions): void {
       @open="openImage"
       @save="saveImage"
       @export="showExportDialog = true"
+      :copy-image="copyImageToClipboard"
       @scan-qr="scanQr"
       @scan-barcode="scanBarcodeImage"
       @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"

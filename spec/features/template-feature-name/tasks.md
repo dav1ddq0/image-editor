@@ -1,4 +1,4 @@
-# NNN · <Feature name> — Tasks
+# NNN · <Feature name>: Tasks
 
 _Actionable checklist derived from `plan.md`. Small, concrete tasks; mark `[x]` when done._
 
