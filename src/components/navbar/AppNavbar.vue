@@ -1,18 +1,18 @@
 <!--
   Top navigation bar, laid out in three zones:
   - left:   brand
-  - center: the four primary actions (Open, Save, Export, Properties) as
+  - center: the primary actions (Open, Save, Export, Copy, Properties) as
   - right:  secondary tools (Scan QR, Barcode, ASCII, Extract Text),
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
 import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt } from '@/components/icons'
 
-const props = defineProps<{ hasImage?: boolean }>()
+const props = defineProps<{ hasImage?: boolean; copyImage: () => Promise<boolean> }>()
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-panel': [] }>()
-
+const copied = ref(false)
 const { isDark, toggle: toggleTheme } = useAppTheme()
 
 const overflowItems = computed(() => [
@@ -29,6 +29,12 @@ function onOverflowSelect(key: string): void {
     case 'ascii-art':    emit('ascii-art');    break
     case 'extract-text': emit('extract-text'); break
   }
+}
+
+async function onCopyImage(e: MouseEvent): Promise<void> {
+  blurActivator(e)
+  copied.value = await props.copyImage()
+  if (copied.value) setTimeout(() => { copied.value = false }, 2000)
 }
 
 function blurActivator(e: MouseEvent): void {
@@ -65,6 +71,11 @@ function blurActivator(e: MouseEvent): void {
       <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Export" @click="blurActivator($event); emit('export')">
         <v-icon icon="mdi-export-variant" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Export" />
+      </v-btn>
+
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Copy image to clipboard" @click="onCopyImage">
+        <v-icon :icon="copied ? 'mdi-check' : 'mdi-content-copy'" size="22" />
+        <v-tooltip activator="parent" location="bottom" :text="copied ? 'Copied!' : 'Copy to clipboard'" />
       </v-btn>
 
       <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Image properties" @click="blurActivator($event); emit('image-properties')">
