@@ -29,22 +29,22 @@ function stepZoomOut(): void {
     :class="{ 'is-dimmed': editor.zoomLocked }"
   >
     <div class="chip reset-control">
-      <button class="zoom-btn" title="Reset to original" :disabled="!editor.hasImage" @click="editor.resetImage()">
+      <button class="zoom-btn" title="Reset to original" :disabled="!editor.hasImage || editor.isInteractionLocked" @click="editor.resetImage()">
         <v-icon icon="mdi-backup-restore" size="18" />
       </button>
     </div>
 
     <div v-if="!editor.zoomLocked" class="chip zoom-controls">
-      <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10" @click="stepZoomOut">−</button>
-      <button class="zoom-value" title="Reset zoom to 100%" @click="editor.zoomReset">{{ editor.zoom }}%</button>
-      <button class="zoom-btn" title="Zoom in" :disabled="editor.zoom >= 500" @click="stepZoomIn">+</button>
+      <button class="zoom-btn" title="Zoom out" :disabled="editor.zoom <= 10 || editor.isInteractionLocked" @click="stepZoomOut">−</button>
+      <button class="zoom-value" title="Reset zoom to 100%" :disabled="editor.isInteractionLocked" @click="editor.zoomReset">{{ editor.zoom }}%</button>
+      <button class="zoom-btn" title="Zoom in" :disabled="editor.zoom >= 500 || editor.isInteractionLocked" @click="stepZoomIn">+</button>
     </div>
 
     <div class="chip undo-redo-controls">
-      <button class="zoom-btn" title="Undo (Ctrl+Z)" :disabled="!editor.canUndo" @click="editor.undo()">
+      <button class="zoom-btn" title="Undo (Ctrl+Z)" :disabled="!editor.canUndo || editor.isInteractionLocked" @click="editor.undo()">
         <v-icon icon="mdi-undo" size="18" />
       </button>
-      <button class="zoom-btn" title="Redo (Ctrl+Y)" :disabled="!editor.canRedo" @click="editor.redo()">
+      <button class="zoom-btn" title="Redo (Ctrl+Y)" :disabled="!editor.canRedo || editor.isInteractionLocked" @click="editor.redo()">
         <v-icon icon="mdi-redo" size="18" />
       </button>
     </div>

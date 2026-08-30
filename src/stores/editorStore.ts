@@ -6,6 +6,7 @@ import type { ImageDescriptor, ImageMetadata } from '@/types/image'
 import type { Adjustments, AdjustmentKey } from '@/types/adjustments'
 import type { AspectPreset, CropRect } from '@/types/crop'
 import type { TextLayer } from '@/types/text'
+import type { TextRegion } from '@/utils/textExtractor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 import { readImageExif } from '@/utils/imageExifMetadata'
 
@@ -43,6 +44,11 @@ export const useEditorStore = defineStore('editor', () => {
     sharpness:  0,
     blur:       0,
   })
+
+  // Inline OCR text-selection session
+  const ocrRegions          = ref<TextRegion[]>([])
+  const ocrText             = ref<string>('')
+  const ocrSelectionActive  = ref<boolean>(false)
 
   const undoStack = ref<HistorySnapshot[]>([])
   const redoStack = ref<HistorySnapshot[]>([])
@@ -101,6 +107,10 @@ export const useEditorStore = defineStore('editor', () => {
     selectedTool.value !== null && selectedTool.value !== 'zoom'
   )
 
+  // True while the editor is locked down to a single interaction (today only
+  // the inline OCR selection). Components read this to disable their controls.
+  const isInteractionLocked = computed<boolean>(() => ocrSelectionActive.value)
+
   // Combines rotation and flip into a single CSS transform string
   const cssTransform = computed<string>(() => {
     const parts: string[] = []
@@ -150,6 +160,21 @@ export const useEditorStore = defineStore('editor', () => {
     selectedTool.value = selectedTool.value === tool ? null : tool
   }
 
+  // ── Inline OCR text selection ──────────────────────────────────────────────
+
+  function startOcrSelection(text: string, regions: TextRegion[]): void {
+    ocrText.value            = text
+    ocrRegions.value         = regions
+    ocrSelectionActive.value = true
+    selectedTool.value       = null
+  }
+
+  function endOcrSelection(): void {
+    ocrText.value            = ''
+    ocrRegions.value         = []
+    ocrSelectionActive.value = false
+  }
+
   async function loadMetadata(file: File): Promise<void> {
     const exifInfo = await readImageExif(file)
     sourceMeta.value = {
@@ -170,6 +195,7 @@ export const useEditorStore = defineStore('editor', () => {
       undoStack.value = []
       redoStack.value = []
       selectedTool.value = null
+      endOcrSelection()
 
       const descriptor: ImageDescriptor = {
         src:    url,
@@ -437,6 +463,10 @@ export const useEditorStore = defineStore('editor', () => {
     adjustments,
     hasImage,
     zoomLocked,
+    ocrRegions,
+    ocrText,
+    ocrSelectionActive,
+    isInteractionLocked,
     canUndo,
     canRedo,
     cssFilter,
@@ -446,6 +476,8 @@ export const useEditorStore = defineStore('editor', () => {
     originalImage,
     sourceMeta,
     selectTool,
+    startOcrSelection,
+    endOcrSelection,
     loadImage,
     updateAdjustment,
     beginAdjustment,

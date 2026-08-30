@@ -10,6 +10,7 @@ _Completed before this SDD process was adopted; listed here for context, not tra
 2. **Navbar icon refactor**: navbar icons extracted into standalone components.
 3. **Material 3 restyle**: full M3 tonal color system (light/dark), shape scale, and tonal component styling (buttons, sliders, filter presets, dialogs) across the app.
 4. **[001 · Split shared types by domain](../features/001-split-shared-types/spec.md)**: replaced the single flat `src/types/editor.ts` with domain-scoped files (`tool.ts`, `filter.ts`, `image.ts`, `adjustments.ts`, `export.ts`, `crop.ts`, `text.ts`) under `src/types/`, updating all 12 consumers.
+5. **[003 · Inline OCR text selection on canvas](../features/003-inline-ocr-text-selection/spec.md)**: moved the "found" OCR result from a popup dialog with a shrunk image copy to a Snipping-Tool-style inline overlay directly on the canvas, with the rest of the editor locked while it's active.
 
 ## Next 🔜
 

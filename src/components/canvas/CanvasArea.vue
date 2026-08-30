@@ -15,6 +15,7 @@ import BrushOverlay     from './BrushOverlay.vue'
 import EraserOverlay    from './EraserOverlay.vue'
 import FillOverlay      from './FillOverlay.vue'
 import ShapesOverlay    from './ShapesOverlay.vue'
+import TextRegionsOverlay from './TextRegionsOverlay.vue'
 import type { CropRect } from '@/types/crop'
 import type { TextLayer } from '@/types/text'
 import { getAutoTextColor } from '@/utils/colorAnalysis'
@@ -31,6 +32,7 @@ const isBrushing   = computed(() => editor.selectedTool === 'brush'  && editor.h
 const isErasing    = computed(() => editor.selectedTool === 'eraser' && editor.hasImage)
 const isFilling    = computed(() => editor.selectedTool === 'fill'   && editor.hasImage)
 const isShaping    = computed(() => editor.selectedTool === 'shapes' && editor.hasImage)
+const isOcrSelecting = computed(() => editor.ocrSelectionActive && editor.hasImage)
 const containerRef = ref<HTMLDivElement>()
 const imgRef       = ref<HTMLImageElement>()
 const displayW     = ref(0)
@@ -62,8 +64,8 @@ function updateDisplaySize(): void {
   }
 }
 
-watch([isCropping, isTexting, isSelecting, isBrushing, isErasing, isFilling, isShaping], ([cropping, texting, selecting, brushing, erasing, filling, shaping]) => {
-  if ((cropping || texting || selecting || brushing || erasing || filling || shaping) && imgRef.value) {
+watch([isCropping, isTexting, isSelecting, isBrushing, isErasing, isFilling, isShaping, isOcrSelecting], (active) => {
+  if (active.some(Boolean) && imgRef.value) {
     resizeObs = new ResizeObserver(updateDisplaySize)
     resizeObs.observe(imgRef.value)
     updateDisplaySize()
@@ -91,7 +93,7 @@ function twoTouchMetrics(t: TouchList): { dist: number; cx: number; cy: number }
 }
 
 function onTouchStart(e: TouchEvent): void {
-  if (!editor.hasImage || e.touches.length !== 2) return
+  if (!editor.hasImage || editor.isInteractionLocked || e.touches.length !== 2) return
   const m = twoTouchMetrics(e.touches)
   isGesturing.value = true
   pinchStartDist = m.dist
@@ -229,16 +231,29 @@ watch(isTexting, async (active) => {
   }
 })
 
+const ocrCopied = ref(false)
+
+async function copyAllOcrText(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(editor.ocrText)
+    ocrCopied.value = true
+    setTimeout(() => { ocrCopied.value = false }, 2000)
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error)
+    ocrCopied.value = false
+  }
+}
+
 // Mouse-wheel zooms the image
 function onWheel(e: WheelEvent): void {
-  if (!editor.hasImage || editor.zoomLocked) return
+  if (!editor.hasImage || editor.zoomLocked || editor.isInteractionLocked) return
   e.preventDefault()
   editor.setZoom(editor.zoom + (e.deltaY < 0 ? 10 : -10))
 }
 
 // Left-click with the zoom tool zooms in; Shift+click zooms out.
 function onContainerClick(e: MouseEvent): void {
-  if (!isZooming.value) return
+  if (!isZooming.value || editor.isInteractionLocked) return
   if (e.shiftKey) editor.zoomOut()
   else            editor.zoomIn()
 }
@@ -341,8 +356,35 @@ const sharpenKernel = computed<string>(() => {
             @apply="handleShapesApply"
             @cancel="editor.selectTool(null)"
           />
+          <TextRegionsOverlay
+            v-if="isOcrSelecting && displayW > 0"
+            :img-width="displayW"
+            :img-height="displayH"
+            :regions="editor.ocrRegions"
+            @close="editor.endOcrSelection()"
+          />
         </div>
       </div>
+    </div>
+
+    <div v-if="isOcrSelecting" class="ocr-actions">
+      <v-btn
+        class="ocr-chip-btn is-outlined"
+        variant="flat"
+        rounded="pill"
+        :prepend-icon="ocrCopied ? 'mdi-check' : 'mdi-select-all'"
+        :aria-label="ocrCopied ? 'All text copied' : 'Copy all extracted text'"
+        @click="copyAllOcrText"
+      >{{ ocrCopied ? 'Copied' : 'Copy all' }}</v-btn>
+
+      <v-btn
+        class="ocr-chip-btn is-filled"
+        variant="flat"
+        rounded="pill"
+        prepend-icon="mdi-close"
+        aria-label="Close extracted text"
+        @click="editor.endOcrSelection()"
+      >Close text</v-btn>
     </div>
 
     <CanvasStatusBar />
@@ -358,6 +400,78 @@ const sharpenKernel = computed<string>(() => {
   background: var(--color-bg);
   overflow: hidden;
   position: relative;
+}
+
+.ocr-actions {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 6;
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 639px) {
+  .ocr-actions {
+    top: auto;
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 72px));
+    left: max(12px, env(safe-area-inset-left));
+    justify-content: center;
+  }
+}
+
+.ocr-chip-btn {
+  height: 40px;
+  padding-inline: 16px 24px;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.00714em;
+  text-transform: none;
+  transition: background-color var(--transition), box-shadow var(--transition);
+}
+
+.ocr-chip-btn :deep(.v-btn__prepend) {
+  margin-inline: 0 8px;
+}
+
+.ocr-chip-btn.is-filled {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  box-shadow: var(--shadow-sm);
+}
+
+.ocr-chip-btn.is-outlined {
+  background: var(--color-surface-container-high);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+
+@media (hover: hover) {
+  .ocr-chip-btn.is-filled:hover {
+    background: color-mix(in oklab, var(--color-primary-container) 92%, var(--color-on-primary-container) 8%);
+    box-shadow: var(--shadow-md);
+  }
+
+  .ocr-chip-btn.is-outlined:hover {
+    background: color-mix(in oklab, var(--color-surface-container-high) 92%, var(--color-text) 8%);
+    border-color: var(--color-subtle);
+  }
+}
+
+.ocr-chip-btn.is-filled:active {
+  background: color-mix(in oklab, var(--color-primary-container) 88%, var(--color-on-primary-container) 12%);
+}
+
+.ocr-chip-btn.is-outlined:active {
+  background: color-mix(in oklab, var(--color-surface-container-high) 88%, var(--color-text) 12%);
+}
+
+.ocr-chip-btn:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .canvas-container {

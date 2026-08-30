@@ -31,6 +31,7 @@ const drawingTools: ToolDefinition[] = [
         :icon="tool.icon"
         :label="tool.label"
         :active="editor.selectedTool === tool.id"
+        :disabled="editor.isInteractionLocked"
         @click="editor.selectTool(tool.id)"
       />
     </div>

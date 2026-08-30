@@ -10,31 +10,56 @@ import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
 import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt } from '@/components/icons'
 
-const props = defineProps<{ hasImage?: boolean; copyImage: () => Promise<boolean> }>()
+const props = defineProps<{ hasImage?: boolean; locked?: boolean; copyImage: () => Promise<boolean> }>()
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-panel': [] }>()
-const copied = ref(false)
 const { isDark, toggle: toggleTheme } = useAppTheme()
+const actionsDisabled = computed(() => !props.hasImage || !!props.locked)
+type CopyState = 'idle' | 'busy' | 'success' | 'error'
+const copyState = ref<CopyState>('idle')
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined
+
+const copyIcon = computed(() => {
+  if (copyState.value === 'success') return 'mdi-check'
+  if (copyState.value === 'error')   return 'mdi-alert-circle-outline'
+  return 'mdi-content-copy'
+})
+
+const copyLabel = computed(() => {
+  if (copyState.value === 'success') return 'Copied!'
+  if (copyState.value === 'error')   return 'Copy failed'
+  return 'Copy image'
+})
+
+async function performCopy(): Promise<void> {
+  if (copyState.value === 'busy') return
+  clearTimeout(copyResetTimer)
+  copyState.value = 'busy'
+  const ok = await props.copyImage()
+  copyState.value = ok ? 'success' : 'error'
+  copyResetTimer = setTimeout(() => { copyState.value = 'idle' }, ok ? 2000 : 3000)
+}
 
 const overflowItems = computed(() => [
-  { key: 'scan-qr',      label: 'Scan QR',      disabled: !props.hasImage },
-  { key: 'scan-barcode', label: 'Scan Barcode', disabled: !props.hasImage },
-  { key: 'ascii-art',    label: 'ASCII Art',    disabled: !props.hasImage },
-  { key: 'extract-text', label: 'Extract Text', disabled: !props.hasImage },
+  { key: 'copy-image',   label: copyLabel.value, disabled: actionsDisabled.value || copyState.value === 'busy' },
+  { key: 'scan-qr',      label: 'Scan QR',      disabled: actionsDisabled.value },
+  { key: 'scan-barcode', label: 'Scan Barcode', disabled: actionsDisabled.value },
+  { key: 'ascii-art',    label: 'ASCII Art',    disabled: actionsDisabled.value },
+  { key: 'extract-text', label: 'Extract Text', disabled: actionsDisabled.value },
 ])
 
 function onOverflowSelect(key: string): void {
   switch (key) {
-    case 'scan-qr':      emit('scan-qr');      break
-    case 'scan-barcode': emit('scan-barcode'); break
-    case 'ascii-art':    emit('ascii-art');    break
-    case 'extract-text': emit('extract-text'); break
+    case 'copy-image':    performCopy();         break
+    case 'scan-qr':       emit('scan-qr');       break
+    case 'scan-barcode':  emit('scan-barcode');  break
+    case 'ascii-art':     emit('ascii-art');     break
+    case 'extract-text':  emit('extract-text');  break
   }
 }
 
 async function onCopyImage(e: MouseEvent): Promise<void> {
   blurActivator(e)
-  copied.value = await props.copyImage()
-  if (copied.value) setTimeout(() => { copied.value = false }, 2000)
+  await performCopy()
 }
 
 function blurActivator(e: MouseEvent): void {
@@ -58,49 +83,56 @@ function blurActivator(e: MouseEvent): void {
 
     <!-- primary actions -->
     <nav class="navbar-zone navbar-center" aria-label="Primary actions">
-      <v-btn class="nav-icon-btn" variant="text" icon aria-label="Open image" @click="blurActivator($event); emit('open')">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="locked" aria-label="Open image" @click="blurActivator($event); emit('open')">
         <v-icon icon="mdi-folder-image" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Open image" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Save" @click="blurActivator($event); emit('save')">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="actionsDisabled" aria-label="Save" @click="blurActivator($event); emit('save')">
         <v-icon icon="mdi-content-save-outline" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Save" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Export" @click="blurActivator($event); emit('export')">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="actionsDisabled" aria-label="Export" @click="blurActivator($event); emit('export')">
         <v-icon icon="mdi-export-variant" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Export" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Copy image to clipboard" @click="onCopyImage">
-        <v-icon :icon="copied ? 'mdi-check' : 'mdi-content-copy'" size="22" />
-        <v-tooltip activator="parent" location="bottom" :text="copied ? 'Copied!' : 'Copy to clipboard'" />
+      <v-btn
+        class="nav-icon-btn copy-action"
+        :class="{ 'nav-icon-btn--success': copyState === 'success', 'nav-icon-btn--error': copyState === 'error' }"
+        variant="text" icon
+        :disabled="actionsDisabled || copyState === 'busy'"
+        :aria-label="copyLabel"
+        @click="onCopyImage"
+      >
+        <v-icon :icon="copyIcon" size="22" />
+        <v-tooltip activator="parent" location="bottom" :text="copyLabel" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn" variant="text" icon :disabled="!hasImage" aria-label="Image properties" @click="blurActivator($event); emit('image-properties')">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="actionsDisabled" aria-label="Image properties" @click="blurActivator($event); emit('image-properties')">
         <v-icon icon="mdi-information-outline" size="22" />
         <v-tooltip activator="parent" location="bottom" text="Image properties" />
       </v-btn>
     </nav>
 
     <div class="navbar-zone navbar-right">
-      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan QR code" @click="blurActivator($event); emit('scan-qr')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="actionsDisabled" aria-label="Scan QR code" @click="blurActivator($event); emit('scan-qr')">
         <IconQrScan class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Scan QR code" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Scan barcode" @click="blurActivator($event); emit('scan-barcode')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="actionsDisabled" aria-label="Scan barcode" @click="blurActivator($event); emit('scan-barcode')">
         <IconBarcode class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Scan barcode" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Generate ASCII art" @click="blurActivator($event); emit('ascii-art')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="actionsDisabled" aria-label="Generate ASCII art" @click="blurActivator($event); emit('ascii-art')">
         <IconAsciiArt class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Generate ASCII art" />
       </v-btn>
 
-      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="!hasImage" aria-label="Extract text from image" @click="blurActivator($event); emit('extract-text')">
+      <v-btn class="nav-icon-btn secondary-action" variant="text" icon :disabled="actionsDisabled" aria-label="Extract text from image" @click="blurActivator($event); emit('extract-text')">
         <IconExtractText class="act-icon" />
         <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
       </v-btn>
@@ -113,13 +145,13 @@ function blurActivator(e: MouseEvent): void {
       </div>
 
       <!-- Theme toggle (light / dark) -->
-      <v-btn class="nav-icon-btn" variant="text" icon @click="blurActivator($event); toggleTheme()">
+      <v-btn class="nav-icon-btn" variant="text" icon :disabled="locked" @click="blurActivator($event); toggleTheme()">
         <v-icon :icon="isDark ? 'mdi-weather-night' : 'mdi-white-balance-sunny'" />
         <v-tooltip activator="parent" location="bottom" :text="isDark ? 'Switch to light theme' : 'Switch to dark theme'" />
       </v-btn>
 
       <!-- Tablet/phone: toggle the right settings panel -->
-      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon @click="blurActivator($event); emit('toggle-panel')">
+      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon :disabled="locked" @click="blurActivator($event); emit('toggle-panel')">
         <v-icon icon="mdi-tune-variant" />
         <v-tooltip activator="parent" location="bottom" text="Toggle settings panel" />
       </v-btn>
@@ -197,6 +229,19 @@ function blurActivator(e: MouseEvent): void {
 
 .nav-icon-btn.v-btn--disabled { opacity: 0.45; }
 
+.nav-icon-btn {
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.nav-icon-btn--success {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+.nav-icon-btn--error {
+  color: var(--color-error);
+}
+
 .panel-toggle { display: none; }
 
 .overflow-only { display: none; }
@@ -215,6 +260,7 @@ function blurActivator(e: MouseEvent): void {
   }
   .brand-name { display: none; }
   .secondary-action { display: none; }
+  .copy-action { display: none; }
   .overflow-only { display: inline-flex; }
 }
 
