@@ -4,14 +4,14 @@
   file open and save/export operations on behalf of the child components.
 -->
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { useEditorStore } from '@/stores/editorStore'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
 import { scanQrCode }          from '@/utils/qrScanner'
 import { scanBarcode }         from '@/utils/barcodeScanner'
 import { convertImageToAscii, type ColorChar } from '@/utils/asciiConverter'
-import { isModelLoaded, loadModel, runOcr, type TextRegion  } from '@/utils/textExtractor'
+import { isModelLoaded, loadModel, runOcr } from '@/utils/textExtractor'
 import AppNavbar         from './navbar/AppNavbar.vue'
 import AppToolbar        from './toolbar/AppToolbar.vue'
 import CanvasArea        from './canvas/CanvasArea.vue'
@@ -83,22 +83,20 @@ async function generateAsciiArt(cols: number, moreLevels: boolean, blockChars: b
 
 // ── Text Extractor ───────────────────────────────────────────────────────────
 const showOcrDialog = ref(false)
-const ocrState      = ref<'loading-model' | 'extracting' | 'found' | 'not-found'>('extracting')
-const ocrText       = ref('')
-const ocrRegions    = ref<TextRegion[]>([])
-const ocrImageSrc   = ref('')
+const ocrState      = ref<'loading-model' | 'extracting' | 'not-found'>('extracting')
 const ocrProgress   = ref(0)
 
 async function extractText(): Promise<void> {
   if (!editor.image) return
+  // A previous inline session would leave stale regions veiling the image.
+  editor.endOcrSelection()
   ocrState.value      = isModelLoaded() ? 'extracting' : 'loading-model'
   ocrProgress.value   = 0
   showOcrDialog.value = true
 
   const img = new Image()
   img.onload = async () => {
-    const canvas      = buildCanvas(img)
-    ocrImageSrc.value = canvas.toDataURL('image/jpeg', 0.92)
+    const canvas = buildCanvas(img)
 
     if (!isModelLoaded()) {
       await loadModel(pct => {
@@ -110,9 +108,9 @@ async function extractText(): Promise<void> {
     ocrState.value = 'extracting'
     const result   = await runOcr(canvas)
     if (result) {
-      ocrText.value    = result.text
-      ocrRegions.value = result.regions
-      ocrState.value   = 'found'
+      showOcrDialog.value = false
+      await nextTick()
+      editor.startOcrSelection(result.text, result.regions)
     } else {
       ocrState.value = 'not-found'
     }
@@ -145,6 +143,7 @@ async function scanBarcodeImage(): Promise<void> {
 }
 
 function onKeyDown(e: KeyboardEvent): void {
+  if (editor.isInteractionLocked) return
   if (!e.ctrlKey && !e.metaKey) return
   if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); editor.undo() }
   if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); editor.redo() }
@@ -207,28 +206,33 @@ function copyImageToClipboard(): Promise<boolean> {
   if (!editor.image) return Promise.resolve(false)
   const source = editor.image
 
-  return new Promise<boolean>((resolve) => {
+  const blobPromise = new Promise<Blob>((resolve, reject) => {
     const img = new Image()
 
-    img.onload = async () => {
-      try {
-        const canvas = buildCanvas(img)
-        const blob   = await new Promise<Blob | null>((res) => {
-          canvas.toBlob(res, 'image/png')
-        })
-        if (!blob) return resolve(false)
-
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        resolve(true)
-      } catch (error) {
-        console.error('Failed to copy image to clipboard:', error)
-        resolve(false)
-      }
+    img.onload = () => {
+      const canvas = buildCanvas(img)
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob)
+        else reject(new Error('canvas.toBlob returned null'))
+      }, 'image/png')
     }
 
-    img.onerror = () => resolve(false)
+    img.onerror = () => reject(new Error('failed to load image for clipboard copy'))
     img.src = source.src
   })
+
+  try {
+    return navigator.clipboard
+      .write([new ClipboardItem({ 'image/png': blobPromise })])
+      .then(() => true)
+      .catch((error) => {
+        console.error('Failed to copy image to clipboard:', error)
+        return false
+      })
+  } catch (error) {
+    console.error('Failed to copy image to clipboard:', error)
+    return Promise.resolve(false)
+  }
 }
 
 function exportImage(options: ExportOptions): void {
@@ -278,6 +282,7 @@ function exportImage(options: ExportOptions): void {
       @save="saveImage"
       @export="showExportDialog = true"
       :copy-image="copyImageToClipboard"
+      :locked="editor.isInteractionLocked"
       @scan-qr="scanQr"
       @scan-barcode="scanBarcodeImage"
       @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"
@@ -319,9 +324,6 @@ function exportImage(options: ExportOptions): void {
     <ExtractTextDialog
       v-model:visible="showOcrDialog"
       :state="ocrState"
-      :text="ocrText"
-      :regions="ocrRegions"
-      :image-src="ocrImageSrc"
       :progress="ocrProgress"
     />
 

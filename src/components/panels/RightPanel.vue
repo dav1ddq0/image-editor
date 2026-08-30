@@ -3,16 +3,19 @@
   Each sub-panel manages its own store interactions independently.
 -->
 <script setup lang="ts">
+import { useEditorStore } from '@/stores/editorStore'
 import AdjustmentsPanel from './AdjustmentsPanel.vue'
 import FiltersPanel from './FiltersPanel.vue'
 import TransformPanel from './TransformPanel.vue'
 
 defineProps<{ panelOpen?: boolean }>()
 defineEmits<{ 'close-panel': [] }>()
+
+const editor = useEditorStore()
 </script>
 
 <template>
-  <aside class="right-panel" :class="{ 'is-open': panelOpen }">
+  <aside class="right-panel" :class="{ 'is-open': panelOpen, 'is-locked': editor.isInteractionLocked }">
     <div class="panel-mobile-header">
       <span class="panel-mobile-title">Settings</span>
       <v-btn
@@ -40,6 +43,11 @@ defineEmits<{ 'close-panel': [] }>()
 }
 
 .panel-mobile-header { display: none; }
+
+.right-panel.is-locked {
+  pointer-events: none;
+  opacity: 0.45;
+}
 
 @media (max-width: 1240px) {
   .right-panel {
