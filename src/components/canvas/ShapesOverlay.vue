@@ -128,59 +128,69 @@ function clearShapes(): void {
 
     <!-- Floating toolbar -->
     <Teleport to="#canvas-area-host">
-    <div class="shapes-toolbar" @pointerdown.stop @click.stop>
+    <div class="shapes-toolbar ov-toolbar" @pointerdown.stop @click.stop>
 
-      <!-- Shape type buttons -->
-      <div class="shape-type-group">
-        <button
-          v-for="s in (['rect', 'ellipse', 'line', 'arrow'] as const)"
-          :key="s"
-          class="ov-btn ov-btn--icon"
-          :class="{ active: shapeType === s }"
-          :title="s.charAt(0).toUpperCase() + s.slice(1)"
-          @click="shapeType = s"
-        >
-          <svg v-if="s === 'rect'"    width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-          <svg v-if="s === 'ellipse'" width="16" height="16" viewBox="0 0 16 16"><ellipse cx="8" cy="8" rx="7" ry="5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-          <svg v-if="s === 'line'"    width="16" height="16" viewBox="0 0 16 16"><line x1="1" y1="15" x2="15" y2="1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <svg v-if="s === 'arrow'"   width="16" height="16" viewBox="0 0 16 16"><line x1="2" y1="14" x2="12" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="5,2 14,2 14,11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
-        </button>
+      <div class="ov-group ov-group--controls">
+
+        <!-- Shape type buttons -->
+        <div class="shape-type-group">
+          <button
+            v-for="s in (['rect', 'ellipse', 'line', 'arrow'] as const)"
+            :key="s"
+            class="ov-btn ov-btn--icon"
+            :class="{ active: shapeType === s }"
+            :title="s.charAt(0).toUpperCase() + s.slice(1)"
+            @click="shapeType = s"
+          >
+            <svg v-if="s === 'rect'"    width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <svg v-if="s === 'ellipse'" width="16" height="16" viewBox="0 0 16 16"><ellipse cx="8" cy="8" rx="7" ry="5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <svg v-if="s === 'line'"    width="16" height="16" viewBox="0 0 16 16"><line x1="1" y1="15" x2="15" y2="1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <svg v-if="s === 'arrow'"   width="16" height="16" viewBox="0 0 16 16"><line x1="2" y1="14" x2="12" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="5,2 14,2 14,11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="ov-sep" />
+
+        <!-- Stroke colour -->
+        <div class="ov-field ov-field--compact">
+          <label class="ov-label">Stroke</label>
+          <input type="color" v-model="strokeColor" class="ov-swatch" title="Stroke color" />
+        </div>
+
+        <div class="ov-sep" />
+
+        <!-- Fill -->
+        <div class="ov-field ov-field--compact">
+          <label class="ov-label">
+            <input type="checkbox" v-model="fillEnabled" class="fill-check" />
+            Fill
+          </label>
+          <input type="color" v-model="fillColor" class="ov-swatch" :disabled="!fillEnabled" title="Fill color" />
+        </div>
+
+        <div class="ov-sep" />
+
+        <div class="ov-field">
+          <label class="ov-label">Width</label>
+          <input
+            type="range"
+            v-model.number="lineWidth"
+            min="1" max="40" step="1"
+            class="ov-range"
+            title="Stroke width"
+          />
+          <span class="ov-value">{{ lineWidth }}</span>
+        </div>
       </div>
 
       <div class="ov-sep" />
 
-      <!-- Stroke colour -->
-      <label class="ov-label">Stroke</label>
-      <input type="color" v-model="strokeColor" class="ov-swatch" title="Stroke color" />
-
-      <div class="ov-sep" />
-
-      <!-- Fill -->
-      <label class="ov-label">
-        <input type="checkbox" v-model="fillEnabled" class="fill-check" />
-        Fill
-      </label>
-      <input type="color" v-model="fillColor" class="ov-swatch" :disabled="!fillEnabled" title="Fill color" />
-
-      <div class="ov-sep" />
-
-      <!-- Line width -->
-      <label class="ov-label">Width</label>
-      <input
-        type="range"
-        v-model.number="lineWidth"
-        min="1" max="40" step="1"
-        class="ov-range"
-        title="Stroke width"
-      />
-      <span class="ov-value">{{ lineWidth }}</span>
-
-      <div class="ov-sep" />
-
-      <!-- Actions -->
-      <button class="ov-btn" :disabled="!hasShapes" @click="clearShapes"><v-icon icon="mdi-restore" size="15" />Clear</button>
-      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')"><v-icon icon="mdi-close" size="16" /></button>
-      <button class="ov-btn ov-btn--primary" :disabled="!hasShapes" @click="canvasRef && emit('apply', canvasRef)"><v-icon icon="mdi-check" size="15" />Apply</button>
+      <div class="ov-group ov-group--actions">
+        <!-- Actions -->
+        <button class="ov-btn" :disabled="!hasShapes" @click="clearShapes"><v-icon icon="mdi-restore" size="15" />Clear</button>
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" :disabled="!hasShapes" @click="canvasRef && emit('apply', canvasRef)"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
 
     </div>
     </Teleport>
@@ -234,10 +244,4 @@ function clearShapes(): void {
   cursor: pointer;
 }
 
-@media (max-width: 639px) {
-  .shapes-toolbar {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-  }
-}
 </style>

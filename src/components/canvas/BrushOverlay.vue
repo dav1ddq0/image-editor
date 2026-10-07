@@ -104,44 +104,53 @@ function applyStrokes(): void {
     />
 
     <Teleport to="#canvas-area-host">
-    <div class="brush-toolbar" @pointerdown.stop @click.stop>
+    <div class="brush-toolbar ov-toolbar" @pointerdown.stop @click.stop>
 
-      <input
-        type="color"
-        v-model="color"
-        class="ov-swatch"
-        title="Brush color"
-      />
+      <div class="ov-group ov-group--controls">
+
+        <input
+          type="color"
+          v-model="color"
+          class="ov-swatch"
+          title="Brush color"
+        />
+
+        <div class="ov-sep" />
+
+        <div class="ov-field">
+          <label class="ov-label">Size</label>
+          <input
+            type="range"
+            v-model.number="brushSize"
+            min="2" max="80" step="1"
+            class="ov-range"
+            title="Brush size"
+          />
+          <span class="ov-value">{{ brushSize }}</span>
+        </div>
+
+        <div class="ov-sep" />
+
+        <div class="ov-field">
+          <label class="ov-label">Opacity</label>
+          <input
+            type="range"
+            v-model.number="opacity"
+            min="10" max="100" step="5"
+            class="ov-range"
+            title="Opacity"
+          />
+          <span class="ov-value">{{ opacity }}%</span>
+        </div>
+      </div>
 
       <div class="ov-sep" />
 
-      <label class="ov-label">Size</label>
-      <input
-        type="range"
-        v-model.number="brushSize"
-        min="2" max="80" step="1"
-        class="ov-range"
-        title="Brush size"
-      />
-      <span class="ov-value">{{ brushSize }}</span>
-
-      <div class="ov-sep" />
-
-      <label class="ov-label">Opacity</label>
-      <input
-        type="range"
-        v-model.number="opacity"
-        min="10" max="100" step="5"
-        class="ov-range"
-        title="Opacity"
-      />
-      <span class="ov-value">{{ opacity }}%</span>
-
-      <div class="ov-sep" />
-
-      <button class="ov-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes"><v-icon icon="mdi-restore" size="15" />Clear</button>
-      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')"><v-icon icon="mdi-close" size="16" /></button>
-      <button class="ov-btn ov-btn--primary" :disabled="!hasStrokes" @click="applyStrokes"><v-icon icon="mdi-check" size="15" />Apply</button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes"><v-icon icon="mdi-restore" size="15" />Clear</button>
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" :disabled="!hasStrokes" @click="applyStrokes"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
 
     </div>
     </Teleport>
@@ -183,10 +192,4 @@ function applyStrokes(): void {
   z-index: 200;
 }
 
-@media (max-width: 639px) {
-  .brush-toolbar {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-  }
-}
 </style>

@@ -24,8 +24,6 @@ const filters: FilterDefinition[] = [
 <template>
   <section class="panel-section">
 
-    <h3 class="panel-title">Filters</h3>
-
     <div class="filters-grid">
       <FilterThumb
         v-for="filter in filters"

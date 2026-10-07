@@ -196,7 +196,8 @@ function applyHandler() {
     </div>
 
     <Teleport to="#canvas-area-host">
-    <div class="crop-controls">
+    <div class="crop-controls ov-toolbar">
+      <div class="ov-group ov-group--controls">
       <div class="preset-group">
         <button
           v-for="p in presetOptions"
@@ -215,14 +216,14 @@ function applyHandler() {
       >
         <v-icon :icon="editor.cropLocked ? 'mdi-lock' : 'mdi-lock-open-variant-outline'" size="15" />
       </button>
+      </div>
 
       <div class="spacer" />
 
-      <button class="ov-btn" @click="emit('cancel')">Cancel</button>
-      <button class="ov-btn ov-btn--primary" @click="applyHandler">
-        <v-icon icon="mdi-check" size="15" />
-        Apply
-      </button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" @click="applyHandler"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
     </div>
     </Teleport>
   </div>
@@ -310,12 +311,9 @@ function applyHandler() {
 
 @media (max-width: 639px) {
   .crop-controls {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
     height: auto;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 6px 8px;
   }
+
+  .spacer { display: none; }
 }
 </style>

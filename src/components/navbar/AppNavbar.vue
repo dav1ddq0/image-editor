@@ -8,10 +8,16 @@
 import { computed, ref } from 'vue'
 import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
-import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt } from '@/components/icons'
+import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt, IconAdjustFilters, IconTransform } from '@/components/icons'
 
-const props = defineProps<{ hasImage?: boolean; locked?: boolean; copyImage: () => Promise<boolean> }>()
-const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-panel': [] }>()
+const props = defineProps<{
+  hasImage?: boolean
+  locked?: boolean
+  copyImage: () => Promise<boolean>
+  adjustPanelOpen?: boolean
+  transformPanelOpen?: boolean
+}>()
+const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-adjust-panel': []; 'toggle-transform-panel': [] }>()
 const { isDark, toggle: toggleTheme } = useAppTheme()
 const actionsDisabled = computed(() => !props.hasImage || !!props.locked)
 type CopyState = 'idle' | 'busy' | 'success' | 'error'
@@ -45,6 +51,8 @@ const overflowItems = computed(() => [
   { key: 'scan-barcode', label: 'Scan Barcode', disabled: actionsDisabled.value },
   { key: 'ascii-art',    label: 'ASCII Art',    disabled: actionsDisabled.value },
   { key: 'extract-text', label: 'Extract Text', disabled: actionsDisabled.value },
+  { key: 'adjust-panel',    label: 'Adjust & Filters', disabled: actionsDisabled.value },
+  { key: 'transform-panel', label: 'Transform',        disabled: actionsDisabled.value },
 ])
 
 function onOverflowSelect(key: string): void {
@@ -54,6 +62,8 @@ function onOverflowSelect(key: string): void {
     case 'scan-barcode':  emit('scan-barcode');  break
     case 'ascii-art':     emit('ascii-art');     break
     case 'extract-text':  emit('extract-text');  break
+    case 'adjust-panel':      emit('toggle-adjust-panel');    break
+    case 'transform-panel':   emit('toggle-transform-panel'); break
   }
 }
 
@@ -137,12 +147,29 @@ function blurActivator(e: MouseEvent): void {
         <v-tooltip activator="parent" location="bottom" text="Extract text from image" />
       </v-btn>
 
-      <div class="overflow-only">
-        <NavbarOverflowMenu
-          :items="overflowItems"
-          @select="onOverflowSelect"
-        />
-      </div>
+      <v-btn
+        class="nav-icon-btn panel-toggle"
+        :class="{ 'nav-icon-btn--active': adjustPanelOpen }"
+        variant="text" icon
+        :disabled="actionsDisabled"
+        aria-label="Adjust &amp; Filters"
+        @click="blurActivator($event); emit('toggle-adjust-panel')"
+      >
+        <IconAdjustFilters class="act-icon" />
+        <v-tooltip activator="parent" location="bottom" text="Adjust &amp; Filters" />
+      </v-btn>
+
+      <v-btn
+        class="nav-icon-btn panel-toggle"
+        :class="{ 'nav-icon-btn--active': transformPanelOpen }"
+        variant="text" icon
+        :disabled="actionsDisabled"
+        aria-label="Transform"
+        @click="blurActivator($event); emit('toggle-transform-panel')"
+      >
+        <IconTransform class="act-icon" />
+        <v-tooltip activator="parent" location="bottom" text="Transform" />
+      </v-btn>
 
       <!-- Theme toggle (light / dark) -->
       <v-btn class="nav-icon-btn" variant="text" icon :disabled="locked" @click="blurActivator($event); toggleTheme()">
@@ -150,11 +177,13 @@ function blurActivator(e: MouseEvent): void {
         <v-tooltip activator="parent" location="bottom" :text="isDark ? 'Switch to light theme' : 'Switch to dark theme'" />
       </v-btn>
 
-      <!-- Tablet/phone: toggle the right settings panel -->
-      <v-btn class="nav-icon-btn panel-toggle" variant="text" icon :disabled="locked" @click="blurActivator($event); emit('toggle-panel')">
-        <v-icon icon="mdi-tune-variant" />
-        <v-tooltip activator="parent" location="bottom" text="Toggle settings panel" />
-      </v-btn>
+      <!-- Overflow menu -->
+      <div class="overflow-only">
+        <NavbarOverflowMenu
+          :items="overflowItems"
+          @select="onOverflowSelect"
+        />
+      </div>
     </div>
 
   </header>
@@ -242,25 +271,26 @@ function blurActivator(e: MouseEvent): void {
   color: var(--color-error);
 }
 
-.panel-toggle { display: none; }
+.nav-icon-btn--active {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
 
 .overflow-only { display: none; }
 
-@media (max-width: 1240px) {
-  .panel-toggle { display: inline-flex; }
-}
-
 @media (max-width: 639px) {
   .navbar {
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     min-height: 52px;
     gap: 4px;
     padding-left: max(10px, env(safe-area-inset-left));
     padding-right: max(8px, env(safe-area-inset-right));
   }
+  .navbar-left { margin-right: auto; }
   .brand-name { display: none; }
   .secondary-action { display: none; }
   .copy-action { display: none; }
+  .panel-toggle { display: none; }
   .overflow-only { display: inline-flex; }
 }
 

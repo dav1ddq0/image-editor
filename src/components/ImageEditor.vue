@@ -4,7 +4,7 @@
   file open and save/export operations on behalf of the child components.
 -->
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { useEditorStore } from '@/stores/editorStore'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
@@ -15,7 +15,8 @@ import { isModelLoaded, loadModel, runOcr } from '@/utils/textExtractor'
 import AppNavbar         from './navbar/AppNavbar.vue'
 import AppToolbar        from './toolbar/AppToolbar.vue'
 import CanvasArea        from './canvas/CanvasArea.vue'
-import RightPanel        from './panels/RightPanel.vue'
+import AdjustFiltersPanel from './panels/AdjustFiltersPanel.vue'
+import TransformFloatingPanel from './panels/TransformFloatingPanel.vue'
 import ExportDialog      from './export/ExportDialog.vue'
 import QrScanDialog      from './qr/QrScanDialog.vue'
 import BarcodeScanDialog from './barcode/BarcodeScanDialog.vue'
@@ -23,11 +24,29 @@ import AsciiArtDialog    from './ascii/AsciiArtDialog.vue'
 import ExtractTextDialog from './ocr/ExtractTextDialog.vue'
 import ImagePropertiesDialog from './properties/ImagePropertiesDialog.vue'
 import type { ExportOptions } from '@/types/export'
+import type { PanelId } from '@/types/panel'
 
 const editor = useEditorStore()
 const showExportDialog     = ref(false)
 const showPropertiesDialog = ref(false)
-const panelOpen            = ref(false)
+const activePanel = shallowRef<PanelId | null>(null)
+
+const adjustPanelOpen    = computed<boolean>(() => activePanel.value === 'adjust')
+const transformPanelOpen = computed<boolean>(() => activePanel.value === 'transform')
+
+function togglePanel(panel: PanelId): void {
+  activePanel.value = activePanel.value === panel ? null : panel
+}
+
+function closePanels(): void {
+  activePanel.value = null
+}
+
+// While the editor is locked to a single interaction the navbar toggles go
+// disabled
+watch(() => editor.isInteractionLocked, (locked) => {
+  if (locked) closePanels()
+})
 
 // ── QR Scanner ──────────────────────────────────────────────────────────────
 const showQrDialog = ref(false)
@@ -38,13 +57,7 @@ async function scanQr(): Promise<void> {
   if (!editor.image) return
   qrState.value      = 'scanning'
   showQrDialog.value = true
-  const result = await scanQrCode(editor.image.src, {
-    cssFilter: editor.cssFilter,
-    rotation:  editor.rotation,
-    flipH:     editor.flipH,
-    flipV:     editor.flipV,
-    sharpness: editor.adjustments.sharpness,
-  })
+  const result = await scanQrCode(editor.image.src, editor.renderOptions)
   if (result) {
     qrText.value  = result
     qrState.value = 'found'
@@ -127,13 +140,7 @@ async function scanBarcodeImage(): Promise<void> {
   if (!editor.image) return
   barcodeState.value      = 'scanning'
   showBarcodeDialog.value = true
-  const result = await scanBarcode(editor.image.src, {
-    cssFilter: editor.cssFilter,
-    rotation:  editor.rotation,
-    flipH:     editor.flipH,
-    flipV:     editor.flipV,
-    sharpness: editor.adjustments.sharpness,
-  })
+  const result = await scanBarcode(editor.image.src, editor.renderOptions)
   if (result) {
     barcodeText.value  = result
     barcodeState.value = 'found'
@@ -171,13 +178,7 @@ function openImage(): void {
 // Builds the fully composited canvas (filters + transform + sharpness).
 // Used by Save, Export and Copy so the output is always identical.
 function buildCanvas(img: HTMLImageElement): HTMLCanvasElement {
-  return buildRenderedCanvas(img, {
-    cssFilter: editor.cssFilter,
-    rotation:  editor.rotation,
-    flipH:     editor.flipH,
-    flipV:     editor.flipV,
-    sharpness: editor.adjustments.sharpness,
-  })
+  return buildRenderedCanvas(img, editor.renderOptions)
 }
 
 function saveImage(): void {
@@ -288,17 +289,22 @@ function exportImage(options: ExportOptions): void {
       @ascii-art="generateAsciiArt(asciiCols, asciiMoreLevels, asciiBlockChars)"
       @extract-text="extractText"
       @image-properties="showPropertiesDialog = true"
-      @toggle-panel="panelOpen = !panelOpen"
+      :adjust-panel-open="adjustPanelOpen"
+      :transform-panel-open="transformPanelOpen"
+      @toggle-adjust-panel="togglePanel('adjust')"
+      @toggle-transform-panel="togglePanel('transform')"
     />
 
     <div class="editor-body">
       <AppToolbar />
       <CanvasArea />
-      <RightPanel :panel-open="panelOpen" @close-panel="panelOpen = false" />
     </div>
 
-    <!-- Mobile backdrop: closes the panel when tapped -->
-    <div v-if="panelOpen" class="panel-backdrop" @click="panelOpen = false" />
+    <AdjustFiltersPanel :open="adjustPanelOpen" @close="closePanels" />
+    <TransformFloatingPanel :open="transformPanelOpen" @close="closePanels" />
+
+    <!-- Mobile backdrop: closes whichever panel is open when tapped -->
+    <div v-if="activePanel" class="panel-backdrop" @click="closePanels" />
 
     <ExportDialog
       v-model:visible="showExportDialog"
@@ -358,8 +364,7 @@ function exportImage(options: ExportOptions): void {
   display: none;
 }
 
-/* Panel is a slide-in sheet up to 1240px (phones + all tablets incl. iPad Pro 11" landscape) */
-@media (max-width: 1240px) {
+@media (max-width: 639px) {
   .panel-backdrop {
     display: block;
     position: fixed;

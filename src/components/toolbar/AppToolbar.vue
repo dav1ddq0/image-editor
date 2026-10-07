@@ -2,11 +2,18 @@
   Vertical left-side toolbar.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import ToolButton from './ToolButton.vue'
-import type { ToolDefinition } from '@/types/tool'
+import type { ToolDefinition, ToolId } from '@/types/tool'
 
 const editor = useEditorStore()
+const TOOLS_WITH_OVERLAY_BAR: readonly ToolId[] = ['crop', 'brush', 'eraser', 'text', 'shapes', 'fill']
+const overlayBarActive = computed<boolean>(() =>
+  editor.hasImage
+  && editor.selectedTool !== null
+  && TOOLS_WITH_OVERLAY_BAR.includes(editor.selectedTool)
+)
 
 const drawingTools: ToolDefinition[] = [
   { id: 'select', icon: 'mdi-cursor-default-outline', label: 'Select' },
@@ -22,7 +29,7 @@ const drawingTools: ToolDefinition[] = [
 </script>
 
 <template>
-  <aside class="toolbar">
+  <aside class="toolbar" :class="{ 'is-overlay-active': overlayBarActive }">
 
     <div class="tool-group">
       <ToolButton
@@ -98,6 +105,19 @@ const drawingTools: ToolDefinition[] = [
     flex: 1 1 0;
     min-width: 0;
     max-width: 48px;
+  }
+}
+
+@media (max-width: 639px) {
+  .toolbar.is-overlay-active {
+    min-height: 0;
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top-width: 0;
+    transition:
+      height var(--transition),
+      min-height var(--transition);
   }
 }
 

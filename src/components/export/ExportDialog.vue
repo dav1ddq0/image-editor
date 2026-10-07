@@ -4,7 +4,7 @@
 -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useTheme } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 import type { ExportFormat, ExportOptions } from '@/types/export'
 
 const props = defineProps<{ visible: boolean; defaultName: string }>()
@@ -15,6 +15,8 @@ const emit = defineEmits<{
 }>()
 
 const theme = useTheme()
+const { smAndDown } = useDisplay()
+const dialogTransition = computed(() => smAndDown.value ? 'dialog-bottom-transition' : 'dialog-transition')
 
 const dialog = computed({
   get: () => props.visible,
@@ -56,7 +58,7 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="448" :theme="theme.name.value">
+  <v-dialog v-model="dialog" :transition="dialogTransition" max-width="448" :theme="theme.name.value">
     <v-card>
 
       <v-card-title>

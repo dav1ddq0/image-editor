@@ -242,9 +242,7 @@ function toRect(): CropRect {
         Crop
       </button>
       <button class="ov-btn" @click="emit('clear', toRect())">Clear</button>
-      <button class="ov-btn ov-btn--icon" aria-label="Deselect" @click="phase = 'idle'">
-        <v-icon icon="mdi-close" size="16" />
-      </button>
+      <button class="ov-btn" @click="phase = 'idle'"><v-icon icon="mdi-close" size="15" />Deselect</button>
     </div>
   </div>
 </template>

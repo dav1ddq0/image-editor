@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useTheme } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 import { useEditorStore } from '@/stores/editorStore'
 import {
   formatFileSize, formatDateTime, formatFormat, formatCamera,
@@ -16,6 +16,8 @@ const props = defineProps<{ visible: boolean }>()
 const emit  = defineEmits<{ 'update:visible': [value: boolean] }>()
 
 const theme  = useTheme()
+const { smAndDown } = useDisplay()
+const dialogTransition = computed(() => smAndDown.value ? 'dialog-bottom-transition' : 'dialog-transition')
 const editor = useEditorStore()
 
 const dialog = computed({
@@ -94,7 +96,7 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="460" max-height="80vh" scrollable :theme="theme.name.value" aria-label="Image Properties">
+  <v-dialog v-model="dialog" :transition="dialogTransition" max-width="460" max-height="80vh" scrollable :theme="theme.name.value" aria-label="Image Properties">
     <v-card>
 
       <v-card-title>

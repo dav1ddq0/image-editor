@@ -10,8 +10,6 @@ const editor = useEditorStore()
 <template>
   <section class="panel-section">
 
-    <h3 class="panel-title">Transform</h3>
-
     <div class="transform-actions">
       <v-btn
         class="transform-btn"

@@ -18,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const { smAndDown } = useDisplay()
+const dialogTransition = computed(() => smAndDown.value ? 'dialog-bottom-transition' : 'dialog-transition')
 const theme = useTheme()
 const dialog = computed({
   get: () => props.visible,
@@ -30,7 +31,7 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="580" :fullscreen="smAndDown" :theme="theme.name.value" scrollable aria-label="Extract Text">
+  <v-dialog v-model="dialog" max-width="460" :transition="dialogTransition" :theme="theme.name.value" aria-label="Extract Text">
     <v-card>
 
       <v-card-title>
