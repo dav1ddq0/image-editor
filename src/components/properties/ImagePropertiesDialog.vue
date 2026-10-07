@@ -5,17 +5,20 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useTheme } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 import { useEditorStore } from '@/stores/editorStore'
 import {
   formatFileSize, formatDateTime, formatFormat, formatCamera,
   formatExposure, formatAperture, formatFocalLength, formatCoords, mapLink,
 } from '@/utils/imageExifMetadata'
+import type { PropertyGroup, PropertyRow } from '@/types/image'
 
 const props = defineProps<{ visible: boolean }>()
 const emit  = defineEmits<{ 'update:visible': [value: boolean] }>()
 
 const theme  = useTheme()
+const { smAndDown } = useDisplay()
+const dialogTransition = computed(() => smAndDown.value ? 'dialog-bottom-transition' : 'dialog-transition')
 const editor = useEditorStore()
 
 const dialog = computed({
@@ -23,15 +26,12 @@ const dialog = computed({
   set: (value: boolean) => emit('update:visible', value),
 })
 
-interface Row { label: string; value: string; href?: string }
-interface Group { title: string; rows: Row[] }
-
 const dims = computed(() => editor.originalImage ?? editor.image)
 
-const groups = computed<Group[]>(() => {
+const groups = computed<PropertyGroup[]>(() => {
   const meta = editor.sourceMeta
   if (!meta) return []
-  const out: Group[] = []
+  const out: PropertyGroup[] = []
 
   // File
   out.push({
@@ -59,7 +59,7 @@ const groups = computed<Group[]>(() => {
   // Camera (EXIF)
   const e = meta.exifInfo
   {
-    const rows: Row[] = []
+    const rows: PropertyRow[] = []
     const camera = formatCamera(e.make, e.model)
     if (camera)                     rows.push({ label: 'Camera',       value: camera })
     if (e.lens)                     rows.push({ label: 'Lens',         value: e.lens })
@@ -94,7 +94,7 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="460" max-height="80vh" scrollable :theme="theme.name.value" aria-label="Image Properties">
+  <v-dialog v-model="dialog" :transition="dialogTransition" max-width="460" max-height="80vh" scrollable :theme="theme.name.value" aria-label="Image Properties">
     <v-card>
 
       <v-card-title>

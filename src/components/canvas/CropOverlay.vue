@@ -4,7 +4,7 @@
 -->
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
-import type { AspectPreset, CropRect } from '@/types/crop'
+import type { AspectPreset, CropBox, CropHandleId, CropPresetOption, CropRect } from '@/types/crop'
 import { useEditorStore } from '@/stores/editorStore'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
@@ -12,9 +12,7 @@ const emit  = defineEmits<{ apply: [rect: CropRect]; cancel: [] }>()
 const editor = useEditorStore()
 
 // Crop box (pixels relative to displayed image)
-interface Box { left: number; top: number; right: number; bottom: number }
-
-const box = reactive<Box>({ left: 0, top: 0, right: props.imgWidth, bottom: props.imgHeight })
+const box = reactive<CropBox>({ left: 0, top: 0, right: props.imgWidth, bottom: props.imgHeight })
 
 watch([() => props.imgWidth, () => props.imgHeight], () => {
   box.left = 0; box.top = 0
@@ -22,8 +20,7 @@ watch([() => props.imgWidth, () => props.imgHeight], () => {
 }, { immediate: true })
 
 // Aspect ratio
-interface PresetOption { id: AspectPreset; label: string; ratio: number | null }
-const presetOptions: PresetOption[] = [
+const presetOptions: CropPresetOption[] = [
   { id: 'free', label: 'Free',  ratio: null },
   { id: '1:1',  label: '1∶1',  ratio: 1 },
   { id: '4:5',  label: '4∶5',  ratio: 4/5 },
@@ -55,13 +52,12 @@ function setPreset(id: AspectPreset) {
 }
 
 // Drag handles 
-type HandleId = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'move'
 const MIN = 30
 
-let drag: HandleId | null = null
+let drag: CropHandleId | null = null
 let origin = { x: 0, y: 0, box: { ...box } }
 
-const handles: { id: HandleId; cursor: string; posStyle: Record<string, string> }[] = [
+const handles: { id: CropHandleId; cursor: string; posStyle: Record<string, string> }[] = [
   { id: 'nw', cursor: 'nw-resize', posStyle: { left: '-5px', top: '-5px' } },
   { id: 'n',  cursor: 'n-resize',  posStyle: { left: 'calc(50% - 5px)', top: '-5px' } },
   { id: 'ne', cursor: 'ne-resize', posStyle: { right: '-5px', top: '-5px' } },
@@ -72,7 +68,7 @@ const handles: { id: HandleId; cursor: string; posStyle: Record<string, string> 
   { id: 'w',  cursor: 'w-resize',  posStyle: { left: '-5px', top: 'calc(50% - 5px)' } },
 ]
 
-function startDrag(e: PointerEvent, handle: HandleId) {
+function startDrag(e: PointerEvent, handle: CropHandleId) {
   e.preventDefault()
   drag   = handle
   origin = { x: e.clientX, y: e.clientY, box: { ...box } }
@@ -196,7 +192,8 @@ function applyHandler() {
     </div>
 
     <Teleport to="#canvas-area-host">
-    <div class="crop-controls">
+    <div class="crop-controls ov-toolbar">
+      <div class="ov-group ov-group--controls">
       <div class="preset-group">
         <button
           v-for="p in presetOptions"
@@ -215,14 +212,14 @@ function applyHandler() {
       >
         <v-icon :icon="editor.cropLocked ? 'mdi-lock' : 'mdi-lock-open-variant-outline'" size="15" />
       </button>
+      </div>
 
       <div class="spacer" />
 
-      <button class="ov-btn" @click="emit('cancel')">Cancel</button>
-      <button class="ov-btn ov-btn--primary" @click="applyHandler">
-        <v-icon icon="mdi-check" size="15" />
-        Apply
-      </button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" @click="applyHandler"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
     </div>
     </Teleport>
   </div>
@@ -310,12 +307,9 @@ function applyHandler() {
 
 @media (max-width: 639px) {
   .crop-controls {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
     height: auto;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 6px 8px;
   }
+
+  .spacer { display: none; }
 }
 </style>

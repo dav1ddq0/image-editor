@@ -19,6 +19,17 @@ export interface ExifInfo {
   longitude?:    number
 }
 
+export interface PropertyRow {
+  label: string
+  value: string
+  href?: string
+}
+
+export interface PropertyGroup {
+  title: string
+  rows:  PropertyRow[]
+}
+
 export interface ImageMetadata {
   name:         string
   size:         number  // bytes on disk

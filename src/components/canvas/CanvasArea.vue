@@ -4,7 +4,7 @@
   layered over the bottom of the canvas.
 -->
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useEditorStore } from '@/stores/editorStore'
 import CanvasDropZone  from './CanvasDropZone.vue'
 import CanvasStatusBar from './CanvasStatusBar.vue'
@@ -164,13 +164,7 @@ function compositeOverlay(
   save: (src: string, w: number, h: number) => void,
 ): void {
   if (!editor.image || !imgRef.value) return
-  const rendered = buildRenderedCanvas(imgRef.value, {
-    cssFilter: editor.cssFilter,
-    rotation:  editor.rotation,
-    flipH:     editor.flipH,
-    flipV:     editor.flipV,
-    sharpness: editor.adjustments.sharpness,
-  })
+  const rendered = buildRenderedCanvas(imgRef.value, editor.renderOptions)
   const output = document.createElement('canvas')
   output.width  = rendered.width
   output.height = rendered.height
@@ -195,15 +189,19 @@ function handleShapesApply(canvas: HTMLCanvasElement): void {
   compositeOverlay(canvas, 'source-over', editor.saveShapesResult)
 }
 
+const fillStartDepth = shallowRef(0)
+watch(isFilling, (active) => {
+  if (active) fillStartDepth.value = editor.undoDepth
+})
+
+function handleFillCancel(): void {
+  editor.undoTo(fillStartDepth.value)
+  editor.selectTool(null)
+}
+
 function handleFill(nx: number, ny: number, color: string, tolerance: number): void {
   if (!editor.image || !imgRef.value) return
-  const rendered = buildRenderedCanvas(imgRef.value, {
-    cssFilter: editor.cssFilter,
-    rotation:  editor.rotation,
-    flipH:     editor.flipH,
-    flipV:     editor.flipV,
-    sharpness: editor.adjustments.sharpness,
-  })
+  const rendered = buildRenderedCanvas(imgRef.value, editor.renderOptions)
   const ctx       = rendered.getContext('2d')!
   const imageData = ctx.getImageData(0, 0, rendered.width, rendered.height)
   const [cx, cy]  = editor.mapDisplayToCanvas(
@@ -265,6 +263,36 @@ const sharpenKernel = computed<string>(() => {
   const s = editor.adjustments.sharpness / 50 // 0-100 → 0-2
   return `0 ${-s} 0 ${-s} ${1 + 4 * s} ${-s} 0 ${-s} 0`
 })
+
+const TONE_SAMPLES = 17
+const toneTable = computed<string>(() => {
+  const h = editor.adjustments.highlights / 100
+  const s = editor.adjustments.shadows / 100
+  const values: string[] = []
+  for (let i = 0; i < TONE_SAMPLES; i++) {
+    const v     = i / (TONE_SAMPLES - 1)
+    const delta = (s * (1 - v) + h * v) * (80 / 255)
+    values.push(Math.min(1, Math.max(0, v + delta)).toFixed(4))
+  }
+  return values.join(' ')
+})
+
+// Offset-only color matrix for temperature (warm/cool)
+const tempTintMatrix = computed<string>(() => {
+  const t = editor.adjustments.temperature / 100
+  const g = editor.adjustments.tint / 100
+  const r = ( t * 40 + g * 20) / 255
+  const gr = (-g * 40) / 255
+  const b = (-t * 40 + g * 20) / 255
+  return `1 0 0 0 ${r}  0 1 0 0 ${gr}  0 0 1 0 ${b}  0 0 0 1 0`
+})
+
+const vignetteStyle = computed(() => ({
+  opacity: String(editor.adjustments.vignette / 100),
+  background:
+    'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%)',
+  transform: editor.cssTransform,
+}))
 </script>
 
 <template>
@@ -276,6 +304,20 @@ const sharpenKernel = computed<string>(() => {
                 color-interpolation-filters="linearRGB">
           <feConvolveMatrix order="3" :kernelMatrix="sharpenKernel"
                             divisor="1" bias="0" edgeMode="duplicate" />
+        </filter>
+
+        <filter id="image-tone" x="0%" y="0%" width="100%" height="100%"
+                color-interpolation-filters="sRGB">
+          <feComponentTransfer>
+            <feFuncR type="table" :tableValues="toneTable" />
+            <feFuncG type="table" :tableValues="toneTable" />
+            <feFuncB type="table" :tableValues="toneTable" />
+          </feComponentTransfer>
+        </filter>
+
+        <filter id="image-temp-tint" x="0%" y="0%" width="100%" height="100%"
+                color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" :values="tempTintMatrix" />
         </filter>
       </defs>
     </svg>
@@ -304,6 +346,13 @@ const sharpenKernel = computed<string>(() => {
             }"
             class="canvas-image"
             @load="updateDisplaySize"
+          />
+          <!-- Vignette preview -->
+          <div
+            v-if="editor.adjustments.vignette > 0"
+            class="vignette-overlay"
+            :style="vignetteStyle"
+            aria-hidden="true"
           />
           <CropOverlay
             v-if="isCropping && displayW > 0"
@@ -347,7 +396,8 @@ const sharpenKernel = computed<string>(() => {
             :img-width="displayW"
             :img-height="displayH"
             @fill="handleFill"
-            @cancel="editor.selectTool(null)"
+            @cancel="handleFillCancel"
+            @apply="editor.selectTool(null)"
           />
           <ShapesOverlay
             v-if="isShaping && displayW > 0"
@@ -508,6 +558,13 @@ const sharpenKernel = computed<string>(() => {
   position: relative;
   display: inline-block;
   line-height: 0;
+}
+
+.vignette-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 639px) {

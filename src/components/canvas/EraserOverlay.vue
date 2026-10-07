@@ -97,27 +97,33 @@ function applyStrokes(): void {
     />
 
     <Teleport to="#canvas-area-host">
-    <div class="eraser-toolbar" @pointerdown.stop @click.stop>
+    <div class="eraser-toolbar ov-toolbar" @pointerdown.stop @click.stop>
 
-      <v-icon class="tool-indicator" icon="mdi-eraser" size="17" aria-hidden="true" />
+      <div class="ov-group ov-group--controls">
+        <v-icon class="tool-indicator" icon="mdi-eraser" size="17" aria-hidden="true" />
+
+        <div class="ov-sep" />
+
+        <div class="ov-field">
+          <label class="ov-label">Size</label>
+          <input
+            type="range"
+            v-model.number="eraserSize"
+            min="4" max="120" step="2"
+            class="ov-range"
+            title="Eraser size"
+          />
+          <span class="ov-value">{{ eraserSize }}</span>
+        </div>
+      </div>
 
       <div class="ov-sep" />
 
-      <label class="ov-label">Size</label>
-      <input
-        type="range"
-        v-model.number="eraserSize"
-        min="4" max="120" step="2"
-        class="ov-range"
-        title="Eraser size"
-      />
-      <span class="ov-value">{{ eraserSize }}</span>
-
-      <div class="ov-sep" />
-
-      <button class="ov-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes"><v-icon icon="mdi-restore" size="15" />Clear</button>
-      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')"><v-icon icon="mdi-close" size="16" /></button>
-      <button class="ov-btn ov-btn--primary" :disabled="!hasStrokes" @click="applyStrokes"><v-icon icon="mdi-check" size="15" />Apply</button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" :disabled="!hasStrokes" @click="clearStrokes" title="Clear strokes"><v-icon icon="mdi-restore" size="15" />Clear</button>
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" :disabled="!hasStrokes" @click="applyStrokes"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
 
     </div>
     </Teleport>
@@ -165,10 +171,4 @@ function applyStrokes(): void {
   flex-shrink: 0;
 }
 
-@media (max-width: 639px) {
-  .eraser-toolbar {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-  }
-}
 </style>

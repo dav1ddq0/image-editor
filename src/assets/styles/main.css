@@ -237,6 +237,66 @@ body {
   flex-shrink: 0;
 }
 
+.ov-group,
+.ov-field { display: contents; }
+
+@media (max-width: 639px) {
+  .canvas-area:has(.ov-toolbar) .floating-info { display: none; }
+
+  .ov-toolbar {
+    top: auto !important;
+    bottom: 12px;
+    left: 12px !important;
+    right: 12px;
+    transform: none !important;
+    width: auto;
+    max-width: none;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border-radius: var(--radius-lg) !important;
+    max-height: calc(100% - 36px);
+    overflow-y: auto;
+  }
+
+  .ov-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ov-group--actions { justify-content: flex-end; }
+
+  .ov-toolbar > .ov-sep {
+    width: auto;
+    height: 1px;
+    align-self: stretch;
+  }
+
+  .ov-group .ov-sep { display: none; }
+
+  .ov-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 100%;
+  }
+
+  .ov-field--compact { flex: 0 1 auto; }
+
+  .ov-field .ov-range {
+    flex: 1 1 auto;
+    min-width: 90px;
+  }
+
+  .ov-field .ov-value {
+    margin-left: auto;
+    text-align: right;
+  }
+}
+
 .ov-label {
   font-size: 0.7rem;
   font-weight: 600;

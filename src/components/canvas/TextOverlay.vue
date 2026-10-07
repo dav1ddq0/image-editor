@@ -105,35 +105,36 @@ function confirm(): void {
     @click="onOverlayClick"
   >
     <Teleport to="#canvas-area-host">
-    <div class="text-toolbar" @pointerdown.stop @click.stop>
+    <div class="text-toolbar ov-toolbar" @pointerdown.stop @click.stop>
 
-      <select v-model="fontFamily" class="ov-select">
-        <option v-for="f in FONT_FAMILIES" :key="f" :value="f">{{ f }}</option>
-      </select>
+      <div class="ov-group ov-group--controls">
 
-      <div class="size-control">
-        <button class="ov-btn ov-btn--icon" aria-label="Decrease font size" @click="fontSize = Math.max(8, fontSize - 2)">
-          <v-icon icon="mdi-minus" size="15" />
-        </button>
-        <span class="ov-value size-value">{{ fontSize }}</span>
-        <button class="ov-btn ov-btn--icon" aria-label="Increase font size" @click="fontSize = Math.min(200, fontSize + 2)">
-          <v-icon icon="mdi-plus" size="15" />
-        </button>
+        <select v-model="fontFamily" class="ov-select">
+          <option v-for="f in FONT_FAMILIES" :key="f" :value="f">{{ f }}</option>
+        </select>
+
+        <div class="size-control">
+          <button class="ov-btn ov-btn--icon" aria-label="Decrease font size" @click="fontSize = Math.max(8, fontSize - 2)">
+            <v-icon icon="mdi-minus" size="15" />
+          </button>
+          <span class="ov-value size-value">{{ fontSize }}</span>
+          <button class="ov-btn ov-btn--icon" aria-label="Increase font size" @click="fontSize = Math.min(200, fontSize + 2)">
+            <v-icon icon="mdi-plus" size="15" />
+          </button>
+        </div>
+
+        <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: bold }" aria-label="Bold" @click="bold = !bold">B</button>
+        <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: italic }" aria-label="Italic" @click="italic = !italic"><em>I</em></button>
+
+        <input type="color" v-model="color" class="ov-swatch" title="Text color" />
       </div>
-
-      <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: bold }" aria-label="Bold" @click="bold = !bold">B</button>
-      <button class="ov-btn ov-btn--icon fmt-btn" :class="{ active: italic }" aria-label="Italic" @click="italic = !italic"><em>I</em></button>
-
-      <input type="color" v-model="color" class="ov-swatch" title="Text color" />
 
       <div class="ov-sep" />
 
-      <button class="ov-btn ov-btn--icon" aria-label="Cancel" @click="emit('cancel')">
-        <v-icon icon="mdi-close" size="16" />
-      </button>
-      <button class="ov-btn ov-btn--icon ov-btn--primary" :disabled="!text.trim()" aria-label="Apply text" @click="confirm">
-        <v-icon icon="mdi-check" size="16" />
-      </button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" :disabled="!text.trim()" @click="confirm"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
 
     </div>
     </Teleport>
@@ -305,10 +306,4 @@ function confirm(): void {
 
 .text-input::placeholder { color: var(--color-subtle); }
 
-@media (max-width: 639px) {
-  .text-toolbar {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-  }
-}
 </style>

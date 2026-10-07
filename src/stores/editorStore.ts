@@ -8,6 +8,7 @@ import type { AspectPreset, CropRect } from '@/types/crop'
 import type { TextLayer } from '@/types/text'
 import type { TextRegion } from '@/utils/textExtractor'
 import { buildRenderedCanvas } from '@/utils/canvasRenderer'
+import type { RenderOptions } from '@/utils/canvasRenderer'
 import { readImageExif } from '@/utils/imageExifMetadata'
 
 interface HistorySnapshot {
@@ -20,6 +21,22 @@ interface HistorySnapshot {
 }
 
 const MAX_HISTORY = 50
+
+function defaultAdjustments(): Adjustments {
+  return {
+    brightness:  0,
+    contrast:    0,
+    saturation:  0,
+    sharpness:   0,
+    blur:        0,
+    highlights:  0,
+    shadows:     0,
+    vibrance:    0,
+    temperature: 0,
+    tint:        0,
+    vignette:    0,
+  }
+}
 
 export const useEditorStore = defineStore('editor', () => {
   const selectedTool   = ref<ToolId | null>(null)
@@ -37,13 +54,7 @@ export const useEditorStore = defineStore('editor', () => {
   const cropPreset = ref<AspectPreset>('free')
   const cropLocked = ref<boolean>(false)
 
-  const adjustments = reactive<Adjustments>({
-    brightness: 0,
-    contrast:   0,
-    saturation: 0,
-    sharpness:  0,
-    blur:       0,
-  })
+  const adjustments = reactive<Adjustments>(defaultAdjustments())
 
   // Inline OCR text-selection session
   const ocrRegions          = ref<TextRegion[]>([])
@@ -95,6 +106,14 @@ export const useEditorStore = defineStore('editor', () => {
     applySnapshot(redoStack.value.pop()!)
   }
 
+  // Number of undoable steps recorded so far
+  const undoDepth = computed<number>(() => undoStack.value.length)
+
+  // Rewinds until only `depth` steps remain
+  function undoTo(depth: number): void {
+    while (undoStack.value.length > depth && canUndo.value) undo()
+  }
+
   function beginAdjustment(): void {
     pushHistory()
   }
@@ -120,8 +139,7 @@ export const useEditorStore = defineStore('editor', () => {
     return parts.join(' ')
   })
 
-  // Builds the CSS filter string applied to the canvas image.
-  const cssFilter = computed<string>(() => {
+  const baseFilterParts = computed<string[]>(() => {
     const parts: string[] = []
 
     const presetMap: Record<FilterId, string> = {
@@ -147,11 +165,44 @@ export const useEditorStore = defineStore('editor', () => {
     if (adjustments.blur !== 0)
       parts.push(`blur(${(adjustments.blur / 10).toFixed(1)}px)`)
 
+    return parts
+  })
+
+  const previewOnlyFilterParts = computed<string[]>(() => {
+    const parts: string[] = []
+
     if (adjustments.sharpness > 0)
       parts.push('url(#image-sharpen)')
 
-    return parts.join(' ')
+    if (adjustments.vibrance !== 0)
+      parts.push(`saturate(${1 + (adjustments.vibrance / 100) * 0.5})`)
+
+    if (adjustments.highlights !== 0 || adjustments.shadows !== 0)
+      parts.push('url(#image-tone)')
+
+    if (adjustments.temperature !== 0 || adjustments.tint !== 0)
+      parts.push('url(#image-temp-tint)')
+
+    return parts
   })
+
+  const cssFilter = computed<string>(() =>
+    [...baseFilterParts.value, ...previewOnlyFilterParts.value].join(' ')
+  )
+
+  const renderOptions = computed<RenderOptions>(() => ({
+    cssFilter:   baseFilterParts.value.join(' '),
+    rotation:    rotation.value,
+    flipH:       flipH.value,
+    flipV:       flipV.value,
+    sharpness:   adjustments.sharpness,
+    highlights:  adjustments.highlights,
+    shadows:     adjustments.shadows,
+    vibrance:    adjustments.vibrance,
+    temperature: adjustments.temperature,
+    tint:        adjustments.tint,
+    vignette:    adjustments.vignette,
+  }))
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -191,10 +242,14 @@ export const useEditorStore = defineStore('editor', () => {
     const img = new Image()
 
     img.onload = () => {
-      // Clear history when a new image is loaded
       undoStack.value = []
       redoStack.value = []
       selectedTool.value = null
+      rotation.value       = 0
+      flipH.value          = false
+      flipV.value          = false
+      selectedFilter.value = 'none'
+      Object.assign(adjustments, defaultAdjustments())
       endOcrSelection()
 
       const descriptor: ImageDescriptor = {
@@ -254,13 +309,7 @@ export const useEditorStore = defineStore('editor', () => {
 
     pushHistory()
     const source = image.value
-    const renderOpts = {
-      cssFilter: cssFilter.value,
-      rotation:  rotation.value,
-      flipH:     flipH.value,
-      flipV:     flipV.value,
-      sharpness: adjustments.sharpness,
-    }
+    const renderOpts = renderOptions.value
     const img = new Image()
     img.onload = () => {
       const rendered = buildRenderedCanvas(img, renderOpts)
@@ -278,7 +327,7 @@ export const useEditorStore = defineStore('editor', () => {
       rotation.value = 0
       flipH.value    = false
       flipV.value    = false
-      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      Object.assign(adjustments, defaultAdjustments())
       selectedFilter.value = 'none'
       selectedTool.value   = null
     }
@@ -293,13 +342,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!image.value) return
     pushHistory()
     const source = image.value
-    const renderOpts = {
-      cssFilter: cssFilter.value,
-      rotation:  rotation.value,
-      flipH:     flipH.value,
-      flipV:     flipV.value,
-      sharpness: adjustments.sharpness,
-    }
+    const renderOpts = renderOptions.value
     const img = new Image()
     img.onload = () => {
       const rendered = buildRenderedCanvas(img, renderOpts)
@@ -320,7 +363,7 @@ export const useEditorStore = defineStore('editor', () => {
       flipV.value          = false
       selectedFilter.value = 'none'
       selectedTool.value   = null
-      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      Object.assign(adjustments, defaultAdjustments())
     }
     img.src = source.src
   }
@@ -335,7 +378,7 @@ export const useEditorStore = defineStore('editor', () => {
     flipV.value          = false
     selectedFilter.value = 'none'
     selectedTool.value   = null
-    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+    Object.assign(adjustments, defaultAdjustments())
   }
 
   // Maps a normalized display-space click (nx, ny) to canvas pixel coordinates
@@ -363,13 +406,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!image.value) return
     pushHistory()
     const source = image.value
-    const renderOpts = {
-      cssFilter: cssFilter.value,
-      rotation:  rotation.value,
-      flipH:     flipH.value,
-      flipV:     flipV.value,
-      sharpness: adjustments.sharpness,
-    }
+    const renderOpts = renderOptions.value
     const img = new Image()
     img.onload = () => {
       const canvas = buildRenderedCanvas(img, renderOpts)
@@ -406,7 +443,7 @@ export const useEditorStore = defineStore('editor', () => {
       flipV.value          = false
       selectedFilter.value = 'none'
       selectedTool.value   = null
-      Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+      Object.assign(adjustments, defaultAdjustments())
     }
     img.src = source.src
   }
@@ -421,7 +458,7 @@ export const useEditorStore = defineStore('editor', () => {
     flipH.value          = false
     flipV.value          = false
     selectedFilter.value = 'none'
-    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+    Object.assign(adjustments, defaultAdjustments())
   }
 
   // Saves the composited shapes result.
@@ -435,7 +472,7 @@ export const useEditorStore = defineStore('editor', () => {
     flipV.value          = false
     selectedFilter.value = 'none'
     selectedTool.value   = null
-    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+    Object.assign(adjustments, defaultAdjustments())
   }
 
   // Saves the composited brush result.
@@ -449,7 +486,7 @@ export const useEditorStore = defineStore('editor', () => {
     flipV.value          = false
     selectedFilter.value = 'none'
     selectedTool.value   = null
-    Object.assign(adjustments, { brightness: 0, contrast: 0, saturation: 0, sharpness: 0, blur: 0 })
+    Object.assign(adjustments, defaultAdjustments())
   }
 
   return {
@@ -469,8 +506,10 @@ export const useEditorStore = defineStore('editor', () => {
     isInteractionLocked,
     canUndo,
     canRedo,
+    undoDepth,
     cssFilter,
     cssTransform,
+    renderOptions,
     cropPreset,
     cropLocked,
     originalImage,
@@ -501,6 +540,7 @@ export const useEditorStore = defineStore('editor', () => {
     saveBrushResult,
     saveShapesResult,
     saveFillResult,
+    undoTo,
     mapDisplayToCanvas,
   }
 })

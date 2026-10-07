@@ -2,22 +2,25 @@
   Paint-bucket fill tool. Click anywhere to flood-fill that colour region.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit = defineEmits<{
   fill:   [nx: number, ny: number, color: string, tolerance: number]
   cancel: []
+  apply:  []
 }>()
 
 const color     = ref('#000000')
 const tolerance = ref(20)
+const hasFilled = shallowRef(false)
 
 function onClick(e: MouseEvent): void {
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
   const nx = (e.clientX - rect.left)  / rect.width
   const ny = (e.clientY - rect.top)   / rect.height
   emit('fill', nx, ny, color.value, tolerance.value)
+  hasFilled.value = true
 }
 </script>
 
@@ -28,30 +31,39 @@ function onClick(e: MouseEvent): void {
     @click="onClick"
   >
     <Teleport to="#canvas-area-host">
-    <div class="fill-toolbar" @pointerdown.stop @click.stop>
+    <div class="fill-toolbar ov-toolbar" @pointerdown.stop @click.stop>
 
-      <v-icon class="tool-indicator" icon="mdi-format-color-fill" size="17" aria-hidden="true" />
+      <div class="ov-group ov-group--controls">
+        <v-icon class="tool-indicator" icon="mdi-format-color-fill" size="17" aria-hidden="true" />
+
+        <div class="ov-sep" />
+
+        <div class="ov-field ov-field--compact">
+          <label class="ov-label">Color</label>
+          <input type="color" v-model="color" class="ov-swatch" title="Fill color" />
+        </div>
+
+        <div class="ov-sep" />
+
+        <div class="ov-field">
+          <label class="ov-label">Tolerance</label>
+          <input
+            type="range"
+            v-model.number="tolerance"
+            min="0" max="100" step="1"
+            class="ov-range"
+            title="Colour tolerance"
+          />
+          <span class="ov-value">{{ tolerance }}</span>
+        </div>
+      </div>
 
       <div class="ov-sep" />
 
-      <label class="ov-label">Color</label>
-      <input type="color" v-model="color" class="ov-swatch" title="Fill color" />
-
-      <div class="ov-sep" />
-
-      <label class="ov-label">Tolerance</label>
-      <input
-        type="range"
-        v-model.number="tolerance"
-        min="0" max="100" step="1"
-        class="ov-range"
-        title="Colour tolerance"
-      />
-      <span class="ov-value">{{ tolerance }}</span>
-
-      <div class="ov-sep" />
-
-      <button class="ov-btn ov-btn--primary" @click="emit('cancel')"><v-icon icon="mdi-check" size="15" />Done</button>
+      <div class="ov-group ov-group--actions">
+        <button class="ov-btn" @click="emit('cancel')"><v-icon icon="mdi-close" size="15" />Cancel</button>
+        <button class="ov-btn ov-btn--primary" :disabled="!hasFilled" @click="emit('apply')"><v-icon icon="mdi-check" size="15" />Apply</button>
+      </div>
 
     </div>
     </Teleport>
@@ -92,10 +104,4 @@ function onClick(e: MouseEvent): void {
   flex-shrink: 0;
 }
 
-@media (max-width: 639px) {
-  .fill-toolbar {
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-  }
-}
 </style>

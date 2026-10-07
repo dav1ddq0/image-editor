@@ -21,6 +21,7 @@ const emit = defineEmits<{
 }>()
 
 const { smAndDown } = useDisplay()
+const dialogTransition = computed(() => smAndDown.value ? 'dialog-bottom-transition' : 'dialog-transition')
 const theme = useTheme()
 
 const dialog = computed({
@@ -106,7 +107,7 @@ function close(): void {
 </script>
 
 <template>
-  <v-dialog v-model="dialog" max-width="640" :fullscreen="smAndDown" :theme="theme.name.value" scrollable aria-label="ASCII Art Generator">
+  <v-dialog v-model="dialog" class="ascii-dialog" max-width="640" :transition="dialogTransition" :theme="theme.name.value" scrollable aria-label="ASCII Art Generator">
     <v-card class="ascii-card">
 
       <v-card-title>
@@ -192,6 +193,43 @@ function close(): void {
 </template>
 
 <style scoped>
+
+@media (max-width: 639px) {
+  .ascii-dialog :deep(.v-overlay__content) {
+    position: fixed;
+    top: calc(52px + env(safe-area-inset-top) + 12px);
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    width: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+  }
+
+  .ascii-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .ascii-output {
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .ascii-card > .v-card-text {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
 .state-center {
   display: flex;
   flex-direction: column;

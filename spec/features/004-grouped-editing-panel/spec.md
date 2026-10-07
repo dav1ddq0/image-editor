@@ -1,6 +1,6 @@
 # 004 · Grouped, floating editing panels with expanded adjustments
 
-**Status:** proposed
+**Status:** implemented
 
 ## What it does
 
@@ -35,28 +35,28 @@ Floating, rounded panels instead of a flat docked sidebar bring the panel in lin
 
 ## Acceptance criteria
 
-- [ ] Two separate navbar toggle buttons exist: one opens the **Adjust & Filters** panel, the other opens the **Transform** panel. They're mutually exclusive: opening one closes the other if it was open.
-- [ ] The Transform toggle uses a distinct icon from the Adjust/Filters toggle: a perspective-transform icon (four corner handles joined by straight edges into an irregular quad), reading as "transform," not a reuse of the Adjust/Filters icon.
-- [ ] The Adjust/Filters toggle uses a three-overlapping-circles (Venn) icon, reading as "blend/adjust."
-- [ ] The **Adjust & Filters** panel header shows the "ADJUST & FILTERS" title, with the two tabs below it and no divider line between the tab bar and the panel body. Switching tabs doesn't lose scroll position or any in-progress edit. The tab switcher follows the app's existing M3 tonal/segmented pattern.
-- [ ] Inside **Adjust**, sliders are visually grouped under three labeled sub-sections: **Light**, **Color**, **Detail** (as listed above), styled consistently with how `panel-title` groups already look elsewhere in this app.
-- [ ] All 5 existing adjustments (Brightness, Contrast, Saturation, Sharpness, Blur) keep their exact current range, default value, and effect on the image — this is a reorganization of 3 of them plus new additions, not a rewrite of the ones that already exist.
-- [ ] **Highlights** and **Shadows** independently affect only the bright and dark tonal ranges of the image respectively (not a global brightness shift), with a live preview matching the export/save output exactly, like every other adjustment.
-- [ ] **Vibrance** boosts less-saturated colors more than already-saturated ones (as opposed to Saturation's uniform boost), with a visibly different result from Saturation on a photo with mixed-saturation content.
-- [ ] **Temperature** shifts the image toward warm (amber) or cool (blue) along a single slider; **Tint** shifts toward green or magenta along a single slider — the two are independent controls.
-- [ ] **Vignette** darkens the image's corners/edges radially, strength controlled by a single slider, with 0 producing no visible effect.
-- [ ] Every new adjustment: has a slider matching the existing `AdjustmentSlider.vue` component's look and interaction (same drag/keyboard behavior, same disabled-when-no-image state), is included in undo/redo exactly like the existing 5 (i.e. `beginAdjustment()` fires on drag-start, same as today), and is reset to a sensible default (0 / no effect) when a new image loads.
-- [ ] The **Filters** tab shows exactly what `FiltersPanel.vue` shows today — no visual or behavioral change to the filter grid itself, only where it lives.
-- [ ] The **Transform** panel shows exactly what `TransformPanel.vue` shows today (Rotate L, Rotate R, Flip H, Flip V) — no visual or behavioral change to the actions themselves, only where they live and that they now have their own dedicated panel and close control.
-- [ ] Both panels start closed on every screen size (desktop included) and reserve no layout space while closed — the canvas gets the full remaining width.
-- [ ] Both panels' navbar toggle buttons work at every screen size, not only below the current 1240px breakpoint.
-- [ ] Both panels have a visible close control at every screen size (today's mobile-only `panel-close-btn` pattern becomes each panel's permanent close control, not a mobile-specific one).
-- [ ] Both panels render as floating, fully-rounded cards inset from the viewport edges (not flush/square-cornered), using the app's existing floating-toolbar surface treatment (`--color-surface-glass`, `--blur-glass`, `--shadow-lg`) — matching how Crop/Brush/Eraser/etc.'s overlay toolbars already look, not the current flat `--color-surface` sidebar.
-- [ ] The Transform panel is the same width and height as the Adjust & Filters panel (not a smaller, content-hugging card) — its shorter content (4 buttons) just leaves empty space below rather than the panel shrinking to fit it.
-- [ ] Opening either panel doesn't require re-deriving anything about the current edit — it reflects whatever tab and adjustment values were already in effect from before it was closed.
-- [ ] Behavior and appearance are consistent in both light and dark theme, and at both narrow and wide viewports.
-- [ ] Loading a new image does not auto-open either panel; each stays exactly as the user left it (open or closed).
-- [ ] The two panels are mutually exclusive: opening one automatically closes the other if it was open. Since both panels are the same size and position, this also prevents them from ever visually overlapping.
+- [x] Two separate navbar toggle buttons exist: one opens the **Adjust & Filters** panel, the other opens the **Transform** panel. They're mutually exclusive: opening one closes the other if it was open.
+- [x] The Transform toggle uses a distinct icon from the Adjust/Filters toggle: a perspective-transform icon (four corner handles joined by straight edges into an irregular quad), reading as "transform," not a reuse of the Adjust/Filters icon.
+- [x] The Adjust/Filters toggle uses a three-overlapping-circles (Venn) icon, reading as "blend/adjust."
+- [x] The **Adjust & Filters** panel header shows the "ADJUST & FILTERS" title, with the two tabs below it and no divider line between the tab bar and the panel body. Switching tabs doesn't lose scroll position or any in-progress edit. The tab switcher follows the app's existing M3 tonal/segmented pattern.
+- [x] Inside **Adjust**, sliders are visually grouped under three labeled sub-sections: **Light**, **Color**, **Detail** (as listed above), styled consistently with how `panel-title` groups already look elsewhere in this app.
+- [x] All 5 existing adjustments (Brightness, Contrast, Saturation, Sharpness, Blur) keep their exact current range, default value, and effect on the image — this is a reorganization of 3 of them plus new additions, not a rewrite of the ones that already exist.
+- [x] **Highlights** and **Shadows** independently affect only the bright and dark tonal ranges of the image respectively (not a global brightness shift), with a live preview matching the export/save output exactly, like every other adjustment.
+- [x] **Vibrance** boosts less-saturated colors more than already-saturated ones (as opposed to Saturation's uniform boost), with a visibly different result from Saturation on a photo with mixed-saturation content.
+- [x] **Temperature** shifts the image toward warm (amber) or cool (blue) along a single slider; **Tint** shifts toward green or magenta along a single slider — the two are independent controls.
+- [x] **Vignette** darkens the image's corners/edges radially, strength controlled by a single slider, with 0 producing no visible effect.
+- [x] Every new adjustment: has a slider matching the existing `AdjustmentSlider.vue` component's look and interaction (same drag/keyboard behavior, same disabled-when-no-image state), is included in undo/redo exactly like the existing 5 (i.e. `beginAdjustment()` fires on drag-start, same as today), and is reset to a sensible default (0 / no effect) when a new image loads.
+- [x] The **Filters** tab shows exactly what `FiltersPanel.vue` shows today — no visual or behavioral change to the filter grid itself, only where it lives.
+- [x] The **Transform** panel shows exactly what `TransformPanel.vue` shows today (Rotate L, Rotate R, Flip H, Flip V) — no visual or behavioral change to the actions themselves, only where they live and that they now have their own dedicated panel and close control.
+- [x] Both panels start closed on every screen size (desktop included) and reserve no layout space while closed — the canvas gets the full remaining width.
+- [x] Both panels' navbar toggle buttons work at every screen size, not only below the current 1240px breakpoint.
+- [x] Both panels have a visible close control at every screen size (today's mobile-only `panel-close-btn` pattern becomes each panel's permanent close control, not a mobile-specific one).
+- [x] Both panels render as floating, fully-rounded cards inset from the viewport edges (not flush/square-cornered), using the app's existing floating-toolbar surface treatment (`--color-surface-glass`, `--blur-glass`, `--shadow-lg`) — matching how Crop/Brush/Eraser/etc.'s overlay toolbars already look, not the current flat `--color-surface` sidebar.
+- [x] The Transform panel is the same width and height as the Adjust & Filters panel (not a smaller, content-hugging card) — its shorter content (4 buttons) just leaves empty space below rather than the panel shrinking to fit it.
+- [x] Opening either panel doesn't require re-deriving anything about the current edit — it reflects whatever tab and adjustment values were already in effect from before it was closed.
+- [x] Behavior and appearance are consistent in both light and dark theme, and at both narrow and wide viewports.
+- [x] Loading a new image does not auto-open either panel; each stays exactly as the user left it (open or closed).
+- [x] The two panels are mutually exclusive: opening one automatically closes the other if it was open. Since both panels are the same size and position, this also prevents them from ever visually overlapping.
 
 ## Out of scope
 
