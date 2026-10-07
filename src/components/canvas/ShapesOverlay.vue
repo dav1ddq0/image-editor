@@ -3,11 +3,10 @@
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { ShapeType } from '@/types/shapes'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit  = defineEmits<{ apply: [canvas: HTMLCanvasElement]; cancel: [] }>()
-
-type ShapeType = 'rect' | 'ellipse' | 'line' | 'arrow'
 
 const canvasRef   = ref<HTMLCanvasElement>()
 const shapeType   = ref<ShapeType>('rect')

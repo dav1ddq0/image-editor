@@ -11,6 +11,7 @@ import {
   formatFileSize, formatDateTime, formatFormat, formatCamera,
   formatExposure, formatAperture, formatFocalLength, formatCoords, mapLink,
 } from '@/utils/imageExifMetadata'
+import type { PropertyGroup, PropertyRow } from '@/types/image'
 
 const props = defineProps<{ visible: boolean }>()
 const emit  = defineEmits<{ 'update:visible': [value: boolean] }>()
@@ -25,15 +26,12 @@ const dialog = computed({
   set: (value: boolean) => emit('update:visible', value),
 })
 
-interface Row { label: string; value: string; href?: string }
-interface Group { title: string; rows: Row[] }
-
 const dims = computed(() => editor.originalImage ?? editor.image)
 
-const groups = computed<Group[]>(() => {
+const groups = computed<PropertyGroup[]>(() => {
   const meta = editor.sourceMeta
   if (!meta) return []
-  const out: Group[] = []
+  const out: PropertyGroup[] = []
 
   // File
   out.push({
@@ -61,7 +59,7 @@ const groups = computed<Group[]>(() => {
   // Camera (EXIF)
   const e = meta.exifInfo
   {
-    const rows: Row[] = []
+    const rows: PropertyRow[] = []
     const camera = formatCamera(e.make, e.model)
     if (camera)                     rows.push({ label: 'Camera',       value: camera })
     if (e.lens)                     rows.push({ label: 'Lens',         value: e.lens })

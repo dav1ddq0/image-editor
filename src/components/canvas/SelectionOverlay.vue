@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import type { CropRect } from '@/types/crop'
+import type { SelectionBox, SelectionDragMode, SelectionPhase } from '@/types/selection'
 
 const props = defineProps<{ imgWidth: number; imgHeight: number }>()
 const emit = defineEmits<{
@@ -13,15 +14,12 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-type Phase = 'idle' | 'drawing' | 'ready'
-const phase = ref<Phase>('idle')
+const phase = ref<SelectionPhase>('idle')
 
-interface Box { left: number; top: number; right: number; bottom: number }
-const box = ref<Box>({ left: 0, top: 0, right: 0, bottom: 0 })
+const box = ref<SelectionBox>({ left: 0, top: 0, right: 0, bottom: 0 })
 const overlayRef = ref<HTMLDivElement>()
 
-type DragMode = 'none' | 'drawing' | 'moving' | 'nw' | 'ne' | 'se' | 'sw'
-let dragMode: DragMode = 'none'
+let dragMode: SelectionDragMode = 'none'
 let drawStart  = { x: 0, y: 0 }
 let moveOrigin = { x: 0, y: 0, box: { left: 0, top: 0, right: 0, bottom: 0 } }
 

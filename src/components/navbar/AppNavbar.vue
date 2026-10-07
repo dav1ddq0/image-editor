@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import { useAppTheme } from '@/composables/useAppTheme'
 import NavbarOverflowMenu from './NavbarOverflowMenu.vue'
 import { IconBrand, IconQrScan, IconBarcode, IconExtractText, IconAsciiArt, IconAdjustFilters, IconTransform } from '@/components/icons'
+import type { CopyState } from '@/types/navbar'
 
 const props = defineProps<{
   hasImage?: boolean
@@ -20,7 +21,6 @@ const props = defineProps<{
 const emit = defineEmits<{ open: []; save: []; export: []; 'scan-qr': []; 'scan-barcode': []; 'ascii-art': []; 'extract-text': []; 'image-properties': []; 'toggle-adjust-panel': []; 'toggle-transform-panel': [] }>()
 const { isDark, toggle: toggleTheme } = useAppTheme()
 const actionsDisabled = computed(() => !props.hasImage || !!props.locked)
-type CopyState = 'idle' | 'busy' | 'success' | 'error'
 const copyState = ref<CopyState>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 

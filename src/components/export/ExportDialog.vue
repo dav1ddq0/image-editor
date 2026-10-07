@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useDisplay, useTheme } from 'vuetify'
-import type { ExportFormat, ExportOptions } from '@/types/export'
+import type { ExportFormat, ExportFormatOption, ExportOptions } from '@/types/export'
 
 const props = defineProps<{ visible: boolean; defaultName: string }>()
 
@@ -31,9 +31,7 @@ watch(() => props.visible, (open) => {
   if (open) fileName.value = props.defaultName.replace(/\.[^.]+$/, '')
 })
 
-interface FormatOption { id: ExportFormat; label: string; ext: string; lossy: boolean }
-
-const formats: FormatOption[] = [
+const formats: ExportFormatOption[] = [
   { id: 'png',  label: 'PNG',  ext: 'png',  lossy: false },
   { id: 'jpeg', label: 'JPEG', ext: 'jpg',  lossy: true  },
   { id: 'webp', label: 'WebP', ext: 'webp', lossy: true  },
